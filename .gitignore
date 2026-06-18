@@ -39,8 +39,11 @@ coverage/
 firebase-debug.log*
 firestore-debug.log*
 ui-debug.log*
-**/firebase_options.dart
 serviceAccountKey*.json
+# NOTE: firebase_options.dart IS committed. Its values are client config that
+# ship in the app binary (not secrets); security is enforced by Firestore rules
+# + App Check. The native google-services.json / GoogleService-Info.plist below
+# are ignored only because the native folders are generated locally.
 
 # ─── Node / Cloud Functions ───
 node_modules/

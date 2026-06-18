@@ -26,27 +26,29 @@ firebase login
 dart pub global activate flutterfire_cli
 ```
 
-## 2. Generate per-app Firebase config
+## 2. Per-app Firebase config — ALREADY DONE ✅
 
-`firebase_options.dart` is per-app, so run `flutterfire configure` **once in each app
-directory**:
+Both apps are already registered with the `kidssafecam` project and their
+`lib/firebase_options.dart` files are generated and committed:
 
-```bash
-cd apps/parent_app
-flutterfire configure --project=kidssafecam
+| App | Android | iOS | Web |
+|---|---|---|---|
+| `parent_app` | `com.kidssafecam.parent` | `com.kidssafecam.parent` | ✓ |
+| `camera_app` | `com.kidssafecam.camera` | `com.kidssafecam.camera` | ✓ |
 
-cd ../camera_app
-flutterfire configure --project=kidssafecam
-```
-
-This registers the platform apps and writes `lib/firebase_options.dart`. That file is
-git-ignored; `lib/firebase_options.dart.example` documents its shape. (These client values
-aren't true secrets — they ship in the binary — but if you'd rather commit the generated
-file for reproducible CI builds, remove the `**/firebase_options.dart` line from
-`.gitignore`. Security is enforced by Firestore rules + App Check, not by hiding them.)
+These files hold **client** config (api keys, app ids) that ships in the app binary — not
+secrets. They are committed so the project builds reproducibly; security is enforced by
+Firestore rules + App Check, never by hiding them.
 
 `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` is already wired
 in each app's `main.dart`.
+
+To regenerate or add platforms later (e.g. after `flutter create` adds native folders), run
+in each app directory:
+
+```bash
+flutterfire configure --project=kidssafecam
+```
 
 ## 3. Backend (Cloud Functions + rules)
 
@@ -72,15 +74,24 @@ Deploy rules, indexes, and functions:
 firebase deploy --only firestore:rules,firestore:indexes,functions
 ```
 
-## 4. Required Firebase products
+## 4. Required Firebase products — remaining manual steps
 
-Enable in the console for `kidssafecam`:
+Still to enable for `kidssafecam` (these mutate the live project and were intentionally
+left for you to confirm):
 
-- **Authentication** → Email/Password (Step 2)
-- **Firestore Database** → in production mode; rules deploy from `backend/firestore`
-- **Cloud Functions** (Blaze plan required)
-- **Cloud Messaging** (Step 10)
-- **App Check** (recommended before any production traffic)
+- **Authentication** → enable **Email/Password** (Console → Authentication → Sign-in
+  method). Needed for Step 2.
+- **Firestore Database** → create the database. ⚠️ **The location is permanent** — pick a
+  region close to your users (e.g. `eur3` for Europe, `nam5` for the US) **before** creating.
+- **Cloud Functions** → requires the **Blaze** (pay-as-you-go) plan.
+- **Cloud Messaging** → used in Step 10.
+- **App Check** → register providers before any production traffic.
+
+After the database exists, deploy rules + indexes:
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
 
 ## 5. If a credential leaks
 
