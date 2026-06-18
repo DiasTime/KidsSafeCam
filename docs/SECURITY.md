@@ -20,6 +20,20 @@ an afterthought. This document defines the threat model and the controls that mi
 | T8 | Excessive data retention of child media/audio | Privacy / regulatory | On-device AI only; no raw media stored by default; retention limits on events |
 | T9 | Account enumeration / brute force | Credential attacks | Firebase Auth throttling; generic error messages; rate-limited functions |
 
+### Implementation status of controls
+
+| Threat | Control implemented? |
+|---|---|
+| T1 unauthorized viewing | ✅ Auth + ownership rules (14 emulator tests); media only between paired peers |
+| T2 stolen/replayed pairing code | ✅ hashed, single-use, 5-min TTL, per-camera + per-parent rate limits (7 tests) |
+| T3 media interception | ✅ WebRTC DTLS-SRTP is mandatory; ⬜ insertable-stream E2E (later) |
+| T4 compromised TURN relay | ✅ relay only forwards encrypted SRTP |
+| T5 leaked long-lived secrets | ✅ ephemeral TURN creds via `getTurnCredentials` (3 tests); no static secret in app |
+| T6 token theft | ⬜ `flutter_secure_storage` wiring pending |
+| T7 fake app instance / abuse | ⚠️ App Check enforced on callables in code; ⬜ provider registration in console |
+| T8 excessive data retention | ✅ on-device AI design; no raw media stored (cloud recording is later + opt-in) |
+| T9 brute force | ✅ per-parent claim throttle; Firebase Auth throttling |
+
 ---
 
 ## 2. Authentication & Authorization

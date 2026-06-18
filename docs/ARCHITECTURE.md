@@ -146,20 +146,28 @@ users/{uid}
   email, displayName, createdAt, fcmTokens[]
 
 devices/{deviceId}
-  ownerId, name, status (online|offline), lastSeenAt, createdAt,
+  ownerId, cameraUid, name, status (online|offline), lastSeenAt, createdAt,
   settings { nightMode, aiSensitivity, notificationsEnabled }
 
-devices/{deviceId}/calls/{callId}        # ephemeral signaling, TTL-cleaned
+devices/{deviceId}/calls/{callId}        # ephemeral signaling
+  offer {sdp,type}, answer {sdp,type}
+  callerCandidates/*, calleeCandidates/* # ICE
 
 events/{eventId}
   deviceId, ownerId, type, timestamp, metadata
 
 notifications/{notificationId}
   userId, title, body, eventId, read, createdAt
+
+# Backend-only (Admin SDK writes; default-deny to clients)
+pairingCodes/{sha256(pepper:code)}       # cameraUid, deviceName, consumed, createdAt, expiresAt
+pairingAttempts/{uid}                    # failures, windowStart (brute-force throttle)
 ```
 
 `ownerId` is denormalized onto `events` so security rules and queries stay O(1) without
-joins. Composite indexes are declared in `/backend/firestore`.
+joins. `cameraUid` records the paired camera identity so the signaling rules can admit both
+peers. Pairing codes are stored **hashed** as the document id (never plaintext). Composite
+indexes are declared in `/backend/firestore`.
 
 ---
 
@@ -175,3 +183,21 @@ joins. Composite indexes are declared in `/backend/firestore`.
 | Scale to millions | Stateless functions, Firestore sharding via per-device subcollections, FCM fan-out |
 
 See **SECURITY.md** for the threat model and the encryption/privacy design in full.
+
+---
+
+## 7. Implementation Status
+
+| Layer | State |
+|---|---|
+| Monorepo, Clean Architecture, Riverpod, theme, routing | ✅ implemented |
+| Auth (email/password, auth-gated routing, `users/{uid}` provisioning) | ✅ implemented |
+| Firestore ownership rules + indexes | ✅ implemented, 14 emulator tests |
+| Pairing (`requestPairingCode` / `claimPairingCode`) | ✅ implemented, 7 tests |
+| Signaling (`SignalingClient`) + ephemeral TURN (`getTurnCredentials`) | ✅ implemented, 3 tests |
+| WebRTC peer connection + media tracks/rendering | ⬜ Step 6 |
+| Notifications, event history, on-device AI, premium | ⬜ later phases |
+
+Backend logic is verified against the Firebase emulator. The Flutter layer is written to
+the same contracts but still needs a `flutter analyze` / device pass (no SDK in CI yet).
+See **IMPLEMENTATION_PLAN.md** for the live per-step checklist.

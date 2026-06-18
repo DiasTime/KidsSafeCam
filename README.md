@@ -30,7 +30,19 @@ on the device — only events leave the phone.
 
 ## Status
 
-**Step 0 — Foundations** (monorepo scaffold). See the implementation plan for what's next.
+Foundations through **Step 5 (WebRTC signaling)** are implemented. The backend is
+emulator-verified; the Flutter code is written but not yet run through `flutter analyze`
+(no SDK in CI yet). See the [implementation plan](docs/IMPLEMENTATION_PLAN.md) for the
+per-step state and what's next (Step 6 — video streaming).
+
+| Area | Done |
+|---|---|
+| Monorepo scaffold, Clean Architecture, Riverpod, theming | ✅ |
+| Firebase init + email/password auth + auth-gated routing | ✅ |
+| Firestore schema + ownership rules (**14 emulator tests**) | ✅ |
+| Secure pairing functions (hashed, single-use, rate-limited; **7 tests**) | ✅ |
+| WebRTC signaling client + ephemeral TURN credentials (**3 tests**) | ✅ |
+| Video/audio streaming, two-way talk, notifications, AI | ⬜ upcoming |
 
 ## Getting started
 
@@ -44,9 +56,23 @@ melos bootstrap
 # Backend functions
 cd backend/functions && npm install
 
-# Run an app (after Firebase is configured — see docs)
+# Run an app (Firebase is already configured — see docs/FIREBASE_SETUP.md)
 cd apps/parent_app && flutter run
 ```
 
-Firebase is configured per environment with `flutterfire configure`; the generated
-`firebase_options.dart` and platform config files are git-ignored.
+### Tests
+
+```bash
+# Firestore security-rules tests (Firestore emulator)
+cd backend/firestore && npm install && npm test
+
+# Cloud Functions tests (pairing + TURN; uses the emulator)
+cd backend/functions && npm install && npm run test:emulator
+
+# Dart/Flutter unit tests
+melos run test
+```
+
+Firebase is configured for the `kidssafecam` project; `firebase_options.dart` is committed
+(client config, not a secret). The native `google-services.json` / `GoogleService-Info.plist`
+are generated locally. See [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md).

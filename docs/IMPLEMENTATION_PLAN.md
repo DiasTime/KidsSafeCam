@@ -150,4 +150,17 @@ motion/night mode, web dashboard, subscriptions.
 
 ## Current focus
 
-**Step 0 (Foundations)** — scaffolding the monorepo so Steps 1+ have a home.
+**Steps 0–5 complete** (Foundations → Auth → Firestore rules → Pairing → Signaling).
+Backend is emulator-verified (14 rules tests + 10 function tests); Dart unit tests written.
+
+**Next: Step 6 — Video streaming.** Build `WebRtcSession` (RTCPeerConnection on top of
+`SignalingClient` + `iceConfigProvider`): the camera publishes its video track, the parent
+renders it with `RTCVideoView`, plus the call lifecycle (create / join / hang up) and a
+live-view screen.
+
+### Outstanding owner/console tasks (not code)
+- Rotate the previously-exposed service-account key.
+- Enable **Email/Password** auth; create the **Firestore database** (region is permanent).
+- Upgrade to **Blaze** and `firebase deploy` (rules, indexes, functions).
+- Register **App Check** providers; set `TURN_SHARED_SECRET` / `TURN_URLS` for real TURN.
+- Run `flutter analyze` / `melos run test` on a machine with the Flutter SDK.
