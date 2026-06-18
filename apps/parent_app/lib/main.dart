@@ -17,17 +17,17 @@ Future<void> main() async {
   runApp(const ProviderScope(child: ParentApp()));
 }
 
-class ParentApp extends StatelessWidget {
+class ParentApp extends ConsumerWidget {
   const ParentApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: 'Baby Monitor',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      routerConfig: parentRouter,
+      routerConfig: ref.watch(routerProvider),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -17,17 +17,17 @@ Future<void> main() async {
   runApp(const ProviderScope(child: CameraApp()));
 }
 
-class CameraApp extends StatelessWidget {
+class CameraApp extends ConsumerWidget {
   const CameraApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: 'Baby Monitor — Camera',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
-      routerConfig: cameraRouter,
+      routerConfig: ref.watch(routerProvider),
       debugShowCheckedModeBanner: false,
     );
   }

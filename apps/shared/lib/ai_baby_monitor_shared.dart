@@ -9,4 +9,11 @@ export 'src/domain/entities/device.dart';
 
 // Core
 export 'src/core/constants.dart';
+export 'src/core/router/go_router_refresh_stream.dart';
 export 'src/core/theme.dart';
+
+// Auth feature
+export 'src/features/auth/data/repositories/firebase_auth_repository.dart';
+export 'src/features/auth/domain/repositories/auth_repository.dart';
+export 'src/features/auth/presentation/auth_providers.dart';
+export 'src/features/auth/presentation/pages/login_page.dart';

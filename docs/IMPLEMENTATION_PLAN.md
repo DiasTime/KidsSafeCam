@@ -37,13 +37,17 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started
 
 ---
 
-## Step 2 — Firebase Authentication  ⬜
+## Step 2 — Firebase Authentication  🚧
 
 **Goal:** Users can sign up / sign in / sign out.
 
-- `auth` feature (data/domain/presentation) in `shared` or per-app as appropriate.
-- Email/password flows, auth-state-driven routing, secure token handling.
-- `users/{uid}` document created on first sign-in.
+- ✅ `auth` feature in `shared` (Clean Architecture): `AuthRepository` contract,
+  `FirebaseAuthRepository` impl, Riverpod `AuthController`, reusable `LoginPage`.
+- ✅ Email/password flows with friendly error mapping; `users/{uid}` profile created on sign-up.
+- ✅ Auth-state-driven routing in both apps (`GoRouterRefreshStream` + redirect to `/login`).
+- ✅ Sign-out from both home screens; unit tests for the controller (fake repo).
+- ⬜ Verify end-to-end against the live project once Email/Password auth is enabled
+  in the console (see docs/FIREBASE_SETUP.md) — needs a local Flutter SDK.
 
 **Done when:** authenticated session persists; rules reject unauthenticated access.
 
