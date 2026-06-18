@@ -1,0 +1,34 @@
+name: ai_baby_monitor_shared
+description: Shared domain entities, clients, theme, and utilities for the AI Baby Monitor apps.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_messaging: ^15.1.3
+  cloud_functions: ^5.1.3
+  firebase_app_check: ^0.3.1
+  # Real-time media
+  flutter_webrtc: ^0.12.5
+  # State management + DI
+  flutter_riverpod: ^2.6.1
+  # Routing
+  go_router: ^14.3.0
+  # Value equality for entities
+  equatable: ^2.0.5
+  # Secure token storage
+  flutter_secure_storage: ^9.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

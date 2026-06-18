@@ -1,0 +1,30 @@
+{
+  "name": "ai-baby-monitor-functions",
+  "version": "0.1.0",
+  "description": "Cloud Functions for the AI Baby Monitor backend",
+  "private": true,
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "eslint src",
+    "test:emulator": "npm run build && firebase emulators:exec --only firestore --project=kidssafecam-test --config ../../firebase.json \"node --test test/*.test.js\"",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore,auth",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "eslint": "^9.14.0",
+    "firebase-tools": "^15.21.0",
+    "typescript": "^5.6.3"
+  }
+}

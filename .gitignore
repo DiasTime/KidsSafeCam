@@ -1,36 +1,64 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ─── Flutter / Dart ───
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.fvm/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# Generated / build outputs
+*.g.dart.lock
+coverage/
+*.lcov
 
-# testing
-/coverage
+# ─── Android ───
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/local.properties
+**/android/key.properties
+**/android/app/google-services.json
+*.keystore
+*.jks
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# ─── iOS / macOS ───
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Runner/GoogleService-Info.plist
+**/Podfile.lock
 .DS_Store
-*.pem
 
-# debug
+# ─── Firebase / config secrets ───
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+serviceAccountKey*.json
+# NOTE: firebase_options.dart IS committed. Its values are client config that
+# ship in the app binary (not secrets); security is enforced by Firestore rules
+# + App Check. The native google-services.json / GoogleService-Info.plist below
+# are ignored only because the native folders are generated locally.
+
+# ─── Node / Cloud Functions ───
+node_modules/
+lib/**/*.js
+lib/**/*.js.map
+backend/functions/lib/
 npm-debug.log*
-yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# ─── Env / secrets ───
 .env
+.env*.local
+*.pem
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ─── IDE ───
+.idea/
+.vscode/
+*.iml

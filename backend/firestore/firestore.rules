@@ -1,0 +1,103 @@
+rules_version = '2';
+
+// AI Baby Monitor — Firestore security rules.
+// Posture: DEFAULT DENY. Every collection is explicitly, ownership-scoped allowed.
+// The rules are the source of truth for authorization — never the client.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ───────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // True when the signed-in user owns the referenced device.
+    function ownsDevice(deviceId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/devices/$(deviceId))
+        && get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerId == request.auth.uid;
+    }
+
+    // True when the signed-in user is a participant in the device's session:
+    // either the owner (parent) or the paired camera identity. Used for the
+    // ephemeral signaling subcollection so both peers can exchange SDP/ICE.
+    function isDeviceParticipant(deviceId) {
+      let device = get(/databases/$(database)/documents/devices/$(deviceId)).data;
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/devices/$(deviceId))
+        && (device.ownerId == request.auth.uid
+            || device.cameraUid == request.auth.uid);
+    }
+
+    // ── users ─────────────────────────────────────────────────
+    // A user may read/write only their own profile.
+    match /users/{uid} {
+      allow read: if isUser(uid);
+      allow create: if isUser(uid)
+        && request.resource.data.email is string;
+      allow update: if isUser(uid)
+        // ownership/identity fields are immutable from the client
+        && request.resource.data.email == resource.data.email;
+      allow delete: if false; // account deletion goes through a Cloud Function
+    }
+
+    // ── devices ───────────────────────────────────────────────
+    // Owner has full control of their devices. Creation must set ownerId to self.
+    match /devices/{deviceId} {
+      // Both the owner (parent) and the paired camera can read the device.
+      allow read: if isSignedIn()
+        && (resource.data.ownerId == request.auth.uid
+            || resource.data.cameraUid == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.name is string;
+      // Owner has full update rights (ownership immutable); the camera may only
+      // update its own heartbeat fields (status / lastSeenAt).
+      allow update: if isSignedIn() && (
+        (resource.data.ownerId == request.auth.uid
+          && request.resource.data.ownerId == resource.data.ownerId)
+        || (resource.data.cameraUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'lastSeenAt']))
+      );
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+
+      // ── signaling subcollection (ephemeral SDP/ICE) ──
+      // Both session participants (owner + paired camera) may exchange signaling.
+      match /calls/{callId} {
+        allow read, write: if isDeviceParticipant(deviceId);
+        match /{candidates=**} {
+          allow read, write: if isDeviceParticipant(deviceId);
+        }
+      }
+    }
+
+    // ── events ────────────────────────────────────────────────
+    // ownerId is denormalized so rules stay O(1). Clients read their own events.
+    // Writes come from trusted on-device producers / Cloud Functions and must be
+    // self-owned; mutation/deletion is locked down.
+    match /events/{eventId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.type is string
+        && request.resource.data.deviceId is string;
+      allow update, delete: if false;
+    }
+
+    // ── notifications ─────────────────────────────────────────
+    // Owned by a user. Created by Cloud Functions (Admin SDK bypasses rules);
+    // the user may only mark their own notifications read.
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId;
+      allow create, delete: if false;
+    }
+  }
+}

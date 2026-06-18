@@ -1,0 +1,22 @@
+name: ai_baby_monitor
+
+packages:
+  - apps/**
+  - apps/shared
+
+command:
+  bootstrap:
+    runPubGetInParallel: true
+
+scripts:
+  analyze:
+    description: Analyze all Dart packages.
+    run: melos exec -- "flutter analyze"
+
+  test:
+    description: Run tests across all packages that have them.
+    run: melos exec --dir-exists=test -- "flutter test"
+
+  format:
+    description: Format all Dart code.
+    run: melos exec -- "dart format ."
