@@ -69,14 +69,20 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started
 
 ---
 
-## Step 4 — Pairing  ⬜
+## Step 4 — Pairing  🚧
 
 **Goal:** Securely bind a camera to a parent account.
 
-- `requestPairingCode` / `claimPairingCode` Cloud Functions (short-lived, hashed, single-use, rate-limited).
-- Camera shows code/QR; parent enters/scans it; `devices` doc created with `ownerId`.
+- ✅ `requestPairingCode` / `claimPairingCode` Cloud Functions: high-entropy 8-char
+  codes, peppered-SHA-256 hashed (stored as doc id), 5-min TTL, single-use via
+  transaction, per-camera active-code cap + per-parent brute-force limit.
+- ✅ **7 emulator tests** for the logic (`npm run test:emulator`) — all passing.
+- ✅ Camera shows the code (`/pair`); parent enters it (Add camera dialog); the
+  `devices/{id}` doc is created with `ownerId` and appears in the realtime list.
+- ⬜ QR scan as an alternative to typing (future polish).
+- ⬜ End-to-end verify against the live project (needs Functions deployed + Blaze).
 
-**Done when:** a fresh camera appears in the parent's device list after pairing.
+**Done when:** a fresh camera appears in the parent's device list after pairing. ✅ (emulator)
 
 ---
 

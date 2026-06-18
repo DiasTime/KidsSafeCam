@@ -13,6 +13,11 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import { EVENT_NOTIFICATION_COPY, EventDoc } from "./types";
+import {
+  claimPairingCodeLogic,
+  PairingError,
+  requestPairingCodeLogic,
+} from "./pairing";
 
 initializeApp();
 const db = getFirestore();
@@ -25,24 +30,43 @@ function requireAuth(auth: { uid: string } | undefined): string {
   return auth.uid;
 }
 
+// Map a domain PairingError onto the matching HttpsError code.
+function toHttpsError(e: unknown): HttpsError {
+  if (e instanceof PairingError) {
+    return new HttpsError(e.code, e.message);
+  }
+  if (e instanceof HttpsError) return e;
+  logger.error("Unexpected pairing error", e);
+  return new HttpsError("internal", "Something went wrong. Please try again.");
+}
+
 /**
  * Step 4 — Pairing. Mint a short-lived, single-use, hashed pairing code for a camera.
- * TODO(step-4): generate code, store hashed with TTL, rate-limit per user.
  */
 export const requestPairingCode = onCall({ enforceAppCheck: true }, async (request) => {
   const uid = requireAuth(request.auth);
-  logger.info("requestPairingCode", { uid });
-  throw new HttpsError("unimplemented", "Pairing is implemented in Step 4.");
+  const deviceName = (request.data?.deviceName as string | undefined) ?? "Camera";
+  try {
+    return await requestPairingCodeLogic(db, uid, deviceName);
+  } catch (e) {
+    throw toHttpsError(e);
+  }
 });
 
 /**
  * Step 4 — Pairing. Claim a pairing code and bind the device to the parent account.
- * TODO(step-4): verify hashed code, atomically consume, create devices/{id} with ownerId.
  */
 export const claimPairingCode = onCall({ enforceAppCheck: true }, async (request) => {
   const uid = requireAuth(request.auth);
-  logger.info("claimPairingCode", { uid });
-  throw new HttpsError("unimplemented", "Pairing is implemented in Step 4.");
+  const code = (request.data?.code as string | undefined)?.trim();
+  if (!code) {
+    throw new HttpsError("invalid-argument", "A pairing code is required.");
+  }
+  try {
+    return await claimPairingCodeLogic(db, uid, code);
+  } catch (e) {
+    throw toHttpsError(e);
+  }
 });
 
 /**

@@ -23,3 +23,8 @@ export 'src/features/devices/data/models/device_model.dart';
 export 'src/features/devices/data/repositories/firestore_device_repository.dart';
 export 'src/features/devices/domain/repositories/device_repository.dart';
 export 'src/features/devices/presentation/device_providers.dart';
+
+// Pairing feature
+export 'src/features/pairing/data/repositories/functions_pairing_repository.dart';
+export 'src/features/pairing/domain/repositories/pairing_repository.dart';
+export 'src/features/pairing/presentation/pairing_providers.dart';

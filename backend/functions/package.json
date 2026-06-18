@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "lint": "eslint --ext .ts src",
+    "lint": "eslint src",
+    "test:emulator": "npm run build && firebase emulators:exec --only firestore --project=kidssafecam-test --config ../../firebase.json \"node --test test/pairing.test.js\"",
     "serve": "npm run build && firebase emulators:start --only functions,firestore,auth",
     "deploy": "firebase deploy --only functions"
   },
@@ -23,6 +24,7 @@
     "@typescript-eslint/eslint-plugin": "^8.13.0",
     "@typescript-eslint/parser": "^8.13.0",
     "eslint": "^9.14.0",
+    "firebase-tools": "^15.21.0",
     "typescript": "^5.6.3"
   }
 }

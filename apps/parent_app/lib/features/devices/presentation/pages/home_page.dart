@@ -2,6 +2,8 @@ import 'package:ai_baby_monitor_shared/ai_baby_monitor_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/add_camera_dialog.dart';
+
 /// Home (camera list) screen for the Parent app. Shows the signed-in user's
 /// devices with live online/offline status from Firestore.
 ///
@@ -47,7 +49,7 @@ class HomePage extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: null, // wired to the pairing flow in Step 4
+        onPressed: () => AddCameraDialog.show(context),
         icon: const Icon(Icons.add),
         label: const Text('Add camera'),
       ),

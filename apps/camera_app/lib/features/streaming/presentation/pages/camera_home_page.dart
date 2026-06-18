@@ -1,6 +1,7 @@
 import 'package:ai_baby_monitor_shared/ai_baby_monitor_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Placeholder home screen for the Camera app.
 ///
@@ -40,6 +41,12 @@ class CameraHomePage extends ConsumerWidget {
               const Text(
                 'Pair with a parent device to begin streaming.',
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => context.push('/pair'),
+                icon: const Icon(Icons.link),
+                label: const Text('Pair with parent'),
               ),
               if (email != null) ...[
                 const SizedBox(height: 16),

@@ -2,6 +2,7 @@ import 'package:ai_baby_monitor_shared/ai_baby_monitor_shared.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/pairing/presentation/pages/pairing_page.dart';
 import '../features/streaming/presentation/pages/camera_home_page.dart';
 
 /// Auth-gated router for the Camera app. Redirects unauthenticated users to
@@ -27,6 +28,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const CameraHomePage(),
+      ),
+      GoRoute(
+        path: '/pair',
+        builder: (context, state) => const PairingPage(),
       ),
     ],
   );
