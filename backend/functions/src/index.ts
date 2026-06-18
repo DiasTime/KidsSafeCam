@@ -18,6 +18,7 @@ import {
   PairingError,
   requestPairingCodeLogic,
 } from "./pairing";
+import { buildIceConfig } from "./turn";
 
 initializeApp();
 const db = getFirestore();
@@ -71,12 +72,14 @@ export const claimPairingCode = onCall({ enforceAppCheck: true }, async (request
 
 /**
  * Step 5 — Signaling. Issue ephemeral, time-limited TURN credentials per session so no
- * static relay secret ships in the app.
- * TODO(step-5): compute HMAC TURN username/credential from TURN_SHARED_SECRET.
+ * static relay secret ships in the app. Returns STUN-only when TURN is unconfigured.
  */
 export const getTurnCredentials = onCall({ enforceAppCheck: true }, async (request) => {
-  requireAuth(request.auth);
-  throw new HttpsError("unimplemented", "TURN credentials are implemented in Step 5.");
+  const uid = requireAuth(request.auth);
+  return buildIceConfig(uid, {
+    sharedSecret: process.env.TURN_SHARED_SECRET,
+    turnUrls: process.env.TURN_URLS,
+  });
 });
 
 /**

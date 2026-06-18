@@ -86,14 +86,20 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started
 
 ---
 
-## Step 5 — WebRTC signaling server  ⬜
+## Step 5 — WebRTC signaling server  🚧
 
 **Goal:** Exchange SDP/ICE over Firestore.
 
-- `devices/{id}/calls/{callId}` offer/answer/candidate subcollections + rules.
-- Ephemeral TURN-credential function; STUN/TURN config in `shared`.
+- ✅ Rules: camera identity (not just owner) can read its device, write heartbeat
+  fields, and use the `calls` signaling subcollection; **+3 emulator rules tests** (14 total).
+- ✅ `getTurnCredentials` function: ephemeral coturn-REST HMAC credentials, STUN-only
+  fallback; **+3 unit tests** (10 function tests total).
+- ✅ `SignalingClient` in `shared`: offer/answer + caller/callee ICE candidate exchange
+  over `devices/{id}/calls/{callId}`; `iceConfigProvider` fetches ICE servers.
+- ⬜ `WebRtcSession` (RTCPeerConnection wiring) lands with Step 6, where it carries
+  the first media track and we can observe `connected`.
 
-**Done when:** a peer connection reaches `connected` between two emulated clients.
+**Done when:** a peer connection reaches `connected` between two clients (Step 6).
 
 ---
 

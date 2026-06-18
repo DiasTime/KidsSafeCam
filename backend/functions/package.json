@@ -11,7 +11,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "lint": "eslint src",
-    "test:emulator": "npm run build && firebase emulators:exec --only firestore --project=kidssafecam-test --config ../../firebase.json \"node --test test/pairing.test.js\"",
+    "test:emulator": "npm run build && firebase emulators:exec --only firestore --project=kidssafecam-test --config ../../firebase.json \"node --test test/*.test.js\"",
     "serve": "npm run build && firebase emulators:start --only functions,firestore,auth",
     "deploy": "firebase deploy --only functions"
   },

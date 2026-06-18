@@ -22,6 +22,17 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerId == request.auth.uid;
     }
 
+    // True when the signed-in user is a participant in the device's session:
+    // either the owner (parent) or the paired camera identity. Used for the
+    // ephemeral signaling subcollection so both peers can exchange SDP/ICE.
+    function isDeviceParticipant(deviceId) {
+      let device = get(/databases/$(database)/documents/devices/$(deviceId)).data;
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/devices/$(deviceId))
+        && (device.ownerId == request.auth.uid
+            || device.cameraUid == request.auth.uid);
+    }
+
     // ── users ─────────────────────────────────────────────────
     // A user may read/write only their own profile.
     match /users/{uid} {
@@ -37,22 +48,30 @@ service cloud.firestore {
     // ── devices ───────────────────────────────────────────────
     // Owner has full control of their devices. Creation must set ownerId to self.
     match /devices/{deviceId} {
-      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      // Both the owner (parent) and the paired camera can read the device.
+      allow read: if isSignedIn()
+        && (resource.data.ownerId == request.auth.uid
+            || resource.data.cameraUid == request.auth.uid);
       allow create: if isSignedIn()
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.name is string;
-      allow update: if isSignedIn()
-        && resource.data.ownerId == request.auth.uid
-        && request.resource.data.ownerId == resource.data.ownerId; // ownership immutable
+      // Owner has full update rights (ownership immutable); the camera may only
+      // update its own heartbeat fields (status / lastSeenAt).
+      allow update: if isSignedIn() && (
+        (resource.data.ownerId == request.auth.uid
+          && request.resource.data.ownerId == resource.data.ownerId)
+        || (resource.data.cameraUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['status', 'lastSeenAt']))
+      );
       allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
 
       // ── signaling subcollection (ephemeral SDP/ICE) ──
-      // Restricted to the device owner. (The camera identity is granted access via
-      // custom claims in a later step; for now the owner drives signaling.)
+      // Both session participants (owner + paired camera) may exchange signaling.
       match /calls/{callId} {
-        allow read, write: if ownsDevice(deviceId);
+        allow read, write: if isDeviceParticipant(deviceId);
         match /{candidates=**} {
-          allow read, write: if ownsDevice(deviceId);
+          allow read, write: if isDeviceParticipant(deviceId);
         }
       }
     }

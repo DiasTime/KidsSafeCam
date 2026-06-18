@@ -118,6 +118,39 @@ test('calls: only the device owner can write signaling data', async () => {
   );
 });
 
+test('calls: the paired camera can also exchange signaling', async () => {
+  await seed((d) =>
+    d.collection('devices').doc('d1')
+      .set({ ownerId: ALICE, cameraUid: 'cam', name: 'Nursery' })
+  );
+  await assertSucceeds(
+    db('cam').collection('devices').doc('d1').collection('calls').doc('c1')
+      .set({ answer: { sdp: 'y', type: 'answer' } })
+  );
+  await assertFails(
+    db(BOB).collection('devices').doc('d1').collection('calls').doc('c1')
+      .set({ answer: { sdp: 'y', type: 'answer' } })
+  );
+});
+
+test('devices: paired camera can read and heartbeat but not rename', async () => {
+  await seed((d) =>
+    d.collection('devices').doc('d1')
+      .set({ ownerId: ALICE, cameraUid: 'cam', name: 'Nursery', status: 'offline' })
+  );
+  await assertSucceeds(db('cam').collection('devices').doc('d1').get());
+  await assertSucceeds(
+    db('cam').collection('devices').doc('d1')
+      .update({ status: 'online', lastSeenAt: new Date() })
+  );
+  // camera cannot change non-heartbeat fields
+  await assertFails(
+    db('cam').collection('devices').doc('d1').update({ name: 'Hijacked' })
+  );
+  // unrelated users still cannot read
+  await assertFails(db(BOB).collection('devices').doc('d1').get());
+});
+
 // ── events ─────────────────────────────────────────────────
 test('events: owner can create a self-owned event but cannot mutate it', async () => {
   const d = db(ALICE);

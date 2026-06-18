@@ -28,3 +28,8 @@ export 'src/features/devices/presentation/device_providers.dart';
 export 'src/features/pairing/data/repositories/functions_pairing_repository.dart';
 export 'src/features/pairing/domain/repositories/pairing_repository.dart';
 export 'src/features/pairing/presentation/pairing_providers.dart';
+
+// Signaling feature (WebRTC)
+export 'src/features/signaling/data/signaling_client.dart';
+export 'src/features/signaling/domain/ice_config.dart';
+export 'src/features/signaling/presentation/signaling_providers.dart';
