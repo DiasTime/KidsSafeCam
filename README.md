@@ -26,6 +26,7 @@ on the device — only events leave the phone.
 - [Architecture](docs/ARCHITECTURE.md) — system design, stack, data flows, data model
 - [Security & Privacy](docs/SECURITY.md) — threat model, encryption, child-data protection
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) — step-by-step roadmap & current focus
+- [Firebase Setup](docs/FIREBASE_SETUP.md) — connecting the apps/backend to `kidssafecam`
 
 ## Status
 

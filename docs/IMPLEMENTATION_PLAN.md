@@ -23,13 +23,15 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started
 
 ---
 
-## Step 1 — Flutter project setup  ⬜
+## Step 1 — Flutter project setup  🚧
 
 **Goal:** Both apps run with shared package, theme, routing, and DI.
 
-- Wire `shared` package into both apps via path dependency.
-- `go_router` navigation, app theme, environment config (`--dart-define`).
-- Firebase initialization (`firebase_core`) gated behind a config check.
+- ✅ Wire `shared` package into both apps via path dependency.
+- ✅ `go_router` navigation, app theme, shared theme applied.
+- ✅ Firebase initialization (`firebase_core` + `Firebase.initializeApp`) wired in `main.dart`.
+- ⬜ Run `flutterfire configure --project=kidssafecam` per app to generate
+  `firebase_options.dart` (see docs/FIREBASE_SETUP.md) — requires a local Flutter SDK.
 
 **Done when:** both apps launch to a placeholder home screen using the shared theme.
 
