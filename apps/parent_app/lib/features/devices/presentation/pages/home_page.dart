@@ -2,17 +2,17 @@ import 'package:ai_baby_monitor_shared/ai_baby_monitor_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Placeholder home (camera list) screen for the Parent app.
+/// Home (camera list) screen for the Parent app. Shows the signed-in user's
+/// devices with live online/offline status from Firestore.
 ///
-/// Future steps replace this with: the live device list with online/offline
-/// status (Step 3), pairing entry (Step 4), and navigation to the live camera
-/// view with audio, push-to-talk, and event history (Steps 6-11).
+/// Pairing (the "Add camera" action) is wired in Step 4; tapping a device opens
+/// the live view in Step 6.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final email = ref.watch(authStateChangesProvider).valueOrNull?.email;
+    final devices = ref.watch(devicesProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Cameras'),
@@ -24,38 +24,84 @@ class HomePage extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.crib_outlined, size: 72),
-              const SizedBox(height: 16),
-              const Text(
-                'No cameras yet',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Pair a camera device to start monitoring.',
-                textAlign: TextAlign.center,
-              ),
-              if (email != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Signed in as $email',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ],
-          ),
+      body: devices.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => _Message(
+          icon: Icons.error_outline,
+          title: 'Could not load cameras',
+          subtitle: '$e',
         ),
+        data: (list) {
+          if (list.isEmpty) {
+            return const _Message(
+              icon: Icons.crib_outlined,
+              title: 'No cameras yet',
+              subtitle: 'Pair a camera device to start monitoring.',
+            );
+          }
+          return ListView.separated(
+            itemCount: list.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, i) => _DeviceTile(device: list[i]),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: null, // wired to the pairing flow in Step 4
         icon: const Icon(Icons.add),
         label: const Text('Add camera'),
+      ),
+    );
+  }
+}
+
+class _DeviceTile extends StatelessWidget {
+  const _DeviceTile({required this.device});
+
+  final Device device;
+
+  @override
+  Widget build(BuildContext context) {
+    final online = device.isOnline;
+    return ListTile(
+      leading: const Icon(Icons.videocam_outlined),
+      title: Text(device.name),
+      subtitle: Text(online ? 'Online' : 'Offline'),
+      trailing: Icon(
+        Icons.circle,
+        size: 12,
+        color: online ? Colors.green : Colors.grey,
+      ),
+      onTap: null, // opens the live view in Step 6
+    );
+  }
+}
+
+class _Message extends StatelessWidget {
+  const _Message({required this.icon, required this.title, required this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 72),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text(subtitle, textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }

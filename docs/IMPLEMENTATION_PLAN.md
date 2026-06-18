@@ -53,15 +53,19 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started
 
 ---
 
-## Step 3 — Firestore schema & rules  ⬜
+## Step 3 — Firestore schema & rules  🚧
 
 **Goal:** Collections + security rules live and enforced.
 
-- `users`, `devices`, `events`, `notifications` with `ownerId` denormalization.
-- Ownership-scoped rules; emulator tests for allow/deny matrix.
-- Composite indexes for event/notification queries.
+- ✅ `users`, `devices`, `events`, `notifications` with `ownerId` denormalization.
+- ✅ Ownership-scoped rules; **12 emulator tests** for the allow/deny matrix
+  (`backend/firestore/test/`, run with `npm test`) — all passing.
+- ✅ Composite indexes for event/notification queries (`firestore.indexes.json`).
+- ✅ Devices data layer in `shared`: `DeviceRepository` + `FirestoreDeviceRepository`
+  + `DeviceModel` mapping + Riverpod `devicesProvider`; parent home shows the live list.
+- ⬜ Deploy rules/indexes to the live project (`firebase deploy`) once the database exists.
 
-**Done when:** rules unit tests pass in the Firestore emulator.
+**Done when:** rules unit tests pass in the Firestore emulator. ✅
 
 ---
 

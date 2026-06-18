@@ -17,3 +17,9 @@ export 'src/features/auth/data/repositories/firebase_auth_repository.dart';
 export 'src/features/auth/domain/repositories/auth_repository.dart';
 export 'src/features/auth/presentation/auth_providers.dart';
 export 'src/features/auth/presentation/pages/login_page.dart';
+
+// Devices feature
+export 'src/features/devices/data/models/device_model.dart';
+export 'src/features/devices/data/repositories/firestore_device_repository.dart';
+export 'src/features/devices/domain/repositories/device_repository.dart';
+export 'src/features/devices/presentation/device_providers.dart';
