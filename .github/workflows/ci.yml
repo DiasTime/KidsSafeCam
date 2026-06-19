@@ -28,21 +28,32 @@ jobs:
           channel: stable
           cache: true
 
-      # melos.yaml is the legacy (melos.yaml-driven) format; pin a 3.x release
-      # that supports `melos bootstrap` + the `scripts:` block this repo uses.
-      - name: Activate Melos
+      # Run the packages directly rather than via Melos: the repo's legacy
+      # melos.yaml can't drive `melos bootstrap` from a global install on
+      # Melos 3+, and Dart 3.5 (Flutter 3.24.3) predates pub workspaces. The
+      # app packages depend on `shared` by path, so a plain `pub get` resolves
+      # everything. `shared` is the only package with tests.
+      - name: Get dependencies (shared)
+        working-directory: apps/shared
+        run: flutter pub get
+
+      - name: Analyze & test shared
+        working-directory: apps/shared
         run: |
-          dart pub global activate melos 3.4.0
-          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+          flutter analyze
+          flutter test
 
-      - name: Bootstrap workspace
-        run: melos bootstrap
+      - name: Analyze parent_app
+        working-directory: apps/parent_app
+        run: |
+          flutter pub get
+          flutter analyze
 
-      - name: Analyze
-        run: melos run analyze
-
-      - name: Test
-        run: melos run test
+      - name: Analyze camera_app
+        working-directory: apps/camera_app
+        run: |
+          flutter pub get
+          flutter analyze
 
   # ----------------------------------------------------------------------------
   # Firestore security rules: emulator-based allow/deny matrix (14 tests).
@@ -68,7 +79,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Install dependencies
         run: npm ci
@@ -100,7 +111,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Install dependencies
         run: npm ci
