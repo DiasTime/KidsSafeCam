@@ -1,6 +1,7 @@
 import 'package:ai_baby_monitor_shared/ai_baby_monitor_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../widgets/add_camera_dialog.dart';
 
@@ -69,12 +70,20 @@ class _DeviceTile extends StatelessWidget {
       leading: const Icon(Icons.videocam_outlined),
       title: Text(device.name),
       subtitle: Text(online ? 'Online' : 'Offline'),
-      trailing: Icon(
-        Icons.circle,
-        size: 12,
-        color: online ? Colors.green : Colors.grey,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.circle,
+            size: 12,
+            color: online ? Colors.green : Colors.grey,
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right),
+        ],
       ),
-      onTap: null, // opens the live view in Step 6
+      // Tapping opens the live view; the camera answers if it's online.
+      onTap: () => context.push('/camera/${device.id}'),
     );
   }
 }

@@ -96,15 +96,37 @@ Legend: ✅ done · 🚧 in progress · ⬜ not started
   fallback; **+3 unit tests** (10 function tests total).
 - ✅ `SignalingClient` in `shared`: offer/answer + caller/callee ICE candidate exchange
   over `devices/{id}/calls/{callId}`; `iceConfigProvider` fetches ICE servers.
-- ⬜ `WebRtcSession` (RTCPeerConnection wiring) lands with Step 6, where it carries
-  the first media track and we can observe `connected`.
+- ✅ `WebRtcSession` (RTCPeerConnection wiring) landed with Step 6 — it carries
+  the first media tracks and surfaces the `connected` state.
 
 **Done when:** a peer connection reaches `connected` between two clients (Step 6).
 
 ---
 
-## Step 6 — Video streaming  ⬜
-Camera publishes video track; parent renders it. Adaptive bitrate, orientation handling.
+## Step 6 — Video streaming  🚧
+Camera publishes video (+ audio) track; parent renders it via `RTCVideoView`.
+
+- ✅ `WebRtcSession` in `shared` (feature: streaming) on top of `SignalingClient`
+  + `iceServersProvider`: parent = caller (recvonly offer → answer + callee ICE),
+  camera = callee (getUserMedia, addTrack, answer + caller ICE). Buffers ICE
+  candidates until the remote description is set; exposes a `connectionState`
+  notifier and local/remote streams.
+- ✅ `iceServersProvider`: ephemeral TURN via `getTurnCredentials`, public-STUN
+  fallback when the function is unavailable (emulator / LAN).
+- ✅ Camera: foreground `CameraStreamingController` keeps a live local preview and
+  answers incoming calls (`watchIncomingCalls`) while the camera screen is active;
+  `cameraDeviceProvider` resolves the camera's own device by `cameraUid`.
+- ✅ Parent: `/camera/:deviceId` live-view screen with `RTCVideoView`, a
+  connecting/connected/disconnected indicator, and a hang-up button that tears
+  down the peer connection and deletes the call doc (`deleteCall`). Tapping a
+  device on the home list opens it.
+- ✅ Verified by `flutter analyze` (clean) + `flutter build web` (both apps) and
+  18 shared unit tests (incl. signaling offer/answer/ICE round-trip via
+  `fake_cloud_firestore`).
+- ⬜ Two-device live-video latency check (< 500 ms on LAN) — pending; the dev
+  environment has no Android SDK/emulator, only web. Adaptive bitrate +
+  orientation handling deferred to follow-up polish.
+
 **Done when:** parent sees live video < 500 ms latency on LAN.
 
 ## Step 7 — Audio streaming  ⬜
@@ -151,16 +173,24 @@ motion/night mode, web dashboard, subscriptions.
 ## Current focus
 
 **Steps 0–5 complete** (Foundations → Auth → Firestore rules → Pairing → Signaling).
-Backend is emulator-verified (14 rules tests + 10 function tests); Dart unit tests written.
+Backend is emulator-verified (14 rules tests + 10 function tests). The Flutter layer has
+now been compiled on a real SDK: native (android/ios) + web platforms generated, both apps
+`flutter analyze` clean and `flutter build web`, and **18 shared unit tests** pass.
 
-**Next: Step 6 — Video streaming.** Build `WebRtcSession` (RTCPeerConnection on top of
-`SignalingClient` + `iceConfigProvider`): the camera publishes its video track, the parent
-renders it with `RTCVideoView`, plus the call lifecycle (create / join / hang up) and a
-live-view screen.
+**Step 6 — Video streaming: implemented (code-complete).** `WebRtcSession` (RTCPeerConnection
+on top of `SignalingClient` + `iceServersProvider`) carries video + audio; the camera answers
+incoming calls with a live preview; the parent renders the remote stream in a `/camera/:deviceId`
+live-view screen with status + hang-up (full call lifecycle). Remaining for Step 6: the
+two-device < 500 ms LAN latency check (needs real devices/emulator — unavailable in the current
+web-only dev environment).
+
+**Next: Step 7 — Audio streaming** (mute control) builds directly on this.
 
 ### Outstanding owner/console tasks (not code)
 - Rotate the previously-exposed service-account key.
 - Enable **Email/Password** auth; create the **Firestore database** (region is permanent).
 - Upgrade to **Blaze** and `firebase deploy` (rules, indexes, functions).
 - Register **App Check** providers; set `TURN_SHARED_SECRET` / `TURN_URLS` for real TURN.
-- Run `flutter analyze` / `melos run test` on a machine with the Flutter SDK.
+- ✅ Run `flutter analyze` / unit tests on a machine with the Flutter SDK (done; clean + 18 tests).
+- Provide an **Android SDK / emulator (or two real phones)** to run the two-device
+  camera↔parent live-video check; this dev environment only has web (Chrome).

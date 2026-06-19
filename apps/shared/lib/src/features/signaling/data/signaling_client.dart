@@ -17,12 +17,17 @@ class SignalingClient {
 
   final FirebaseFirestore _db;
 
+  CollectionReference<Map<String, dynamic>> _calls(String deviceId) => _db
+      .collection(FirestoreCollections.devices)
+      .doc(deviceId)
+      .collection(FirestoreCollections.calls);
+
   DocumentReference<Map<String, dynamic>> _call(String deviceId, String callId) =>
-      _db
-          .collection(FirestoreCollections.devices)
-          .doc(deviceId)
-          .collection(FirestoreCollections.calls)
-          .doc(callId);
+      _calls(deviceId).doc(callId);
+
+  /// Allocates a fresh, unused call id (the parent/caller picks this before
+  /// writing its offer).
+  String newCallId(String deviceId) => _calls(deviceId).doc().id;
 
   CollectionReference<Map<String, dynamic>> _callerCandidates(
           String deviceId, String callId) =>
@@ -47,10 +52,33 @@ class SignalingClient {
         SetOptions(merge: true),
       );
 
+  /// Reads the current offer once (the callee uses this when answering a call
+  /// it has just been notified about).
+  Future<RTCSessionDescription?> getOffer(String deviceId, String callId) async {
+    final doc = await _call(deviceId, callId).get();
+    return _toDescription(doc.data()?['offer']);
+  }
+
   Stream<RTCSessionDescription?> watchOffer(String deviceId, String callId) =>
       _call(deviceId, callId)
           .snapshots()
           .map((doc) => _toDescription(doc.data()?['offer']));
+
+  /// Camera (callee) side: emits the id of each newly-created call that has an
+  /// offer but no answer yet — i.e. a parent waiting for the camera to join.
+  /// Existing unanswered calls are replayed when the listener attaches.
+  Stream<String> watchIncomingCalls(String deviceId) =>
+      _calls(deviceId).snapshots().expand(
+            (snap) => snap.docChanges
+                .where((c) => c.type == DocumentChangeType.added)
+                .where((c) {
+                  final data = c.doc.data();
+                  return data != null &&
+                      data['offer'] != null &&
+                      data['answer'] == null;
+                })
+                .map((c) => c.doc.id),
+          );
 
   Stream<RTCSessionDescription?> watchAnswer(String deviceId, String callId) =>
       _call(deviceId, callId)

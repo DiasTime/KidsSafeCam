@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/devices/presentation/pages/home_page.dart';
+import '../features/live_view/presentation/pages/live_view_page.dart';
 
 /// Auth-gated router for the Parent app. Redirects unauthenticated users to
 /// `/login` and signed-in users away from it; refreshes on auth changes.
@@ -26,6 +27,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: '/camera/:deviceId',
+        builder: (context, state) =>
+            LiveViewPage(deviceId: state.pathParameters['deviceId']!),
       ),
     ],
   );

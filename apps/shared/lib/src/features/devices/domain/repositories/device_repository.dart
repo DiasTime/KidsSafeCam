@@ -8,6 +8,11 @@ abstract class DeviceRepository {
   /// Streams a single device (null if it disappears).
   Stream<Device?> watchDevice(String deviceId);
 
+  /// Camera side: streams the device this camera identity is paired to (the
+  /// device whose `cameraUid` matches), or null until paired. Returns the
+  /// first match if more than one exists.
+  Stream<Device?> watchDeviceForCamera(String cameraUid);
+
   /// Rename a device.
   Future<void> rename({required String deviceId, required String name});
 

@@ -33,3 +33,7 @@ export 'src/features/pairing/presentation/pairing_providers.dart';
 export 'src/features/signaling/data/signaling_client.dart';
 export 'src/features/signaling/domain/ice_config.dart';
 export 'src/features/signaling/presentation/signaling_providers.dart';
+
+// Streaming feature (WebRTC peer connection + media)
+export 'src/features/streaming/data/webrtc_session.dart';
+export 'src/features/streaming/presentation/streaming_providers.dart';

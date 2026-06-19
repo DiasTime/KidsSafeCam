@@ -21,3 +21,11 @@ final devicesProvider = StreamProvider<List<Device>>((ref) {
 final deviceProvider = StreamProvider.family<Device?, String>((ref, deviceId) {
   return ref.watch(deviceRepositoryProvider).watchDevice(deviceId);
 });
+
+/// Camera side: streams the device this signed-in camera identity is paired to
+/// (matched by `cameraUid`). Null while signed out or not yet paired.
+final cameraDeviceProvider = StreamProvider<Device?>((ref) {
+  final user = ref.watch(authStateChangesProvider).valueOrNull;
+  if (user == null) return Stream.value(null);
+  return ref.watch(deviceRepositoryProvider).watchDeviceForCamera(user.id);
+});

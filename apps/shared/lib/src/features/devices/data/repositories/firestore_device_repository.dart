@@ -34,6 +34,18 @@ class FirestoreDeviceRepository implements DeviceRepository {
   }
 
   @override
+  Stream<Device?> watchDeviceForCamera(String cameraUid) {
+    // The security rules admit the camera identity to read a device matching
+    // its own cameraUid, so this query is allowed (no orderBy → no extra index).
+    return _devices
+        .where('cameraUid', isEqualTo: cameraUid)
+        .limit(1)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.isEmpty ? null : DeviceModel.fromDoc(snap.docs.first));
+  }
+
+  @override
   Future<void> rename({required String deviceId, required String name}) {
     return _devices.doc(deviceId).update({'name': name});
   }

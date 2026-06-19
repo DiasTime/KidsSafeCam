@@ -32,3 +32,5 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  # In-memory Firestore for testing the signaling client without the emulator.
+  fake_cloud_firestore: ^3.0.0

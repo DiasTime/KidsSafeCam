@@ -195,7 +195,7 @@ See **SECURITY.md** for the threat model and the encryption/privacy design in fu
 | Firestore ownership rules + indexes | ✅ implemented, 14 emulator tests |
 | Pairing (`requestPairingCode` / `claimPairingCode`) | ✅ implemented, 7 tests |
 | Signaling (`SignalingClient`) + ephemeral TURN (`getTurnCredentials`) | ✅ implemented, 3 tests |
-| WebRTC peer connection + media tracks/rendering | ⬜ Step 6 |
+| WebRTC peer connection + media tracks/rendering | ✅ implemented (Step 6); two-device latency check pending |
 | Notifications, event history, on-device AI, premium | ⬜ later phases |
 
 Backend logic is verified against the Firebase emulator. The Flutter layer is written to
