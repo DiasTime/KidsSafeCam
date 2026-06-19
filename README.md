@@ -30,10 +30,11 @@ on the device — only events leave the phone.
 
 ## Status
 
-Foundations through **Step 5 (WebRTC signaling)** are implemented. The backend is
-emulator-verified; the Flutter code is written but not yet run through `flutter analyze`
-(no SDK in CI yet). See the [implementation plan](docs/IMPLEMENTATION_PLAN.md) for the
-per-step state and what's next (Step 6 — video streaming).
+Foundations through **Step 7 (audio streaming + mute)** are implemented. The backend is
+emulator-verified and a GitHub Actions CI runs `flutter analyze`/tests plus the emulator
+suites on every push. The remaining gaps are two-device media checks (no Android SDK in the
+dev env) and the live Firebase bring-up. See the [implementation plan](docs/IMPLEMENTATION_PLAN.md)
+for the per-step state and what's next (Step 8 — two-way push-to-talk).
 
 | Area | Done |
 |---|---|
@@ -42,7 +43,9 @@ per-step state and what's next (Step 6 — video streaming).
 | Firestore schema + ownership rules (**14 emulator tests**) | ✅ |
 | Secure pairing functions (hashed, single-use, rate-limited; **7 tests**) | ✅ |
 | WebRTC signaling client + ephemeral TURN credentials (**3 tests**) | ✅ |
-| Video/audio streaming, two-way talk, notifications, AI | ⬜ upcoming |
+| Video streaming (camera publishes, parent renders; full call lifecycle) | ✅ |
+| Audio streaming + parent-side mute control (**+4 tests**) | ✅ |
+| Two-way talk, background/reconnect, notifications, AI | ⬜ upcoming |
 
 ## Getting started
 

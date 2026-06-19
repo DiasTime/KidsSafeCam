@@ -129,8 +129,22 @@ Camera publishes video (+ audio) track; parent renders it via `RTCVideoView`.
 
 **Done when:** parent sees live video < 500 ms latency on LAN.
 
-## Step 7 — Audio streaming  ⬜
+## Step 7 — Audio streaming  🚧
 Camera publishes audio; parent plays it with mute control.
+
+- ✅ Audio already flows end-to-end from Step 6: the camera captures audio in
+  `getUserMedia` and the parent offers a `recvonly` audio transceiver, so the
+  camera's microphone track is published and received with the video.
+- ✅ Parent-side **mute control** in `WebRtcSession` (`setRemoteAudioMuted` /
+  `toggleRemoteAudioMuted` + a `remoteAudioMuted` notifier): disables the
+  received audio tracks locally so playback stops instantly without
+  renegotiating. A mute chosen before the stream arrives is applied on arrival.
+- ✅ `LiveViewController.toggleMute` + `LiveViewState.isMuted`; the live-view
+  app bar shows a volume/mute toggle once remote media is attached.
+- ✅ **+4 shared unit tests** for the mute state machine (`webrtc_session_test.dart`).
+- ⬜ Two-device check that the parent actually *hears* the camera and that mute
+  silences it (needs real devices/emulator — unavailable in the web-only dev env).
+
 **Done when:** parent hears live audio; mute works.
 
 ## Step 8 — Two-way communication (push-to-talk)  ⬜
@@ -184,7 +198,14 @@ live-view screen with status + hang-up (full call lifecycle). Remaining for Step
 two-device < 500 ms LAN latency check (needs real devices/emulator — unavailable in the current
 web-only dev environment).
 
-**Next: Step 7 — Audio streaming** (mute control) builds directly on this.
+**Step 7 — Audio streaming: implemented (code-complete).** Audio rides the same
+peer connection established in Step 6; this step adds parent-side mute control
+(`WebRtcSession.toggleRemoteAudioMuted` → `LiveViewController.toggleMute` → a
+volume toggle in the live-view app bar) plus 4 unit tests. Remaining: the
+two-device check that the parent hears live audio and that mute silences it
+(needs real devices/emulator).
+
+**Next: Step 8 — Two-way communication (push-to-talk)** builds directly on this.
 
 ### Outstanding owner/console tasks (not code)
 - Rotate the previously-exposed service-account key.

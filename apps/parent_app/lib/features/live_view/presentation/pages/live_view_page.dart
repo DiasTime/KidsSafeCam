@@ -32,7 +32,17 @@ class LiveViewPage extends ConsumerWidget {
         backgroundColor: Colors.black,
         appBar: AppBar(
           title: Text(device?.name ?? 'Live view'),
-          actions: [_StatusChip(state: state)],
+          actions: [
+            if (state.hasRemoteVideo)
+              IconButton(
+                tooltip: state.isMuted ? 'Unmute' : 'Mute',
+                onPressed: controller.toggleMute,
+                icon: Icon(
+                  state.isMuted ? Icons.volume_off : Icons.volume_up,
+                ),
+              ),
+            _StatusChip(state: state),
+          ],
         ),
         body: Stack(
           fit: StackFit.expand,

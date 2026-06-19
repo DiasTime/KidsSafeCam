@@ -45,6 +45,11 @@ class WebRtcSession {
   final ValueNotifier<RTCPeerConnectionState> connectionState =
       ValueNotifier(RTCPeerConnectionState.RTCPeerConnectionStateNew);
 
+  /// Whether the remote (camera) audio is currently muted on this side
+  /// (Step 7). Muting just disables the received audio tracks locally, so
+  /// playback stops instantly without renegotiating the call.
+  final ValueNotifier<bool> remoteAudioMuted = ValueNotifier(false);
+
   /// Fired when the remote stream arrives (parent renders this).
   void Function(MediaStream stream)? onRemoteStream;
 
@@ -73,6 +78,8 @@ class WebRtcSession {
     pc.onTrack = (event) {
       if (event.streams.isNotEmpty) {
         _remoteStream = event.streams.first;
+        // Respect a mute toggled before the stream arrived.
+        _applyRemoteAudioMuted();
         onRemoteStream?.call(_remoteStream!);
       }
     };
@@ -174,6 +181,29 @@ class WebRtcSession {
       await _pc?.addCandidate(candidate);
     }
     _pendingRemoteCandidates.clear();
+  }
+
+  // ── Audio mute (parent side, Step 7) ───────────────────────────────
+  /// Mutes or unmutes the camera's audio by toggling the `enabled` flag on the
+  /// received audio tracks. Returns the resulting muted state. Safe to call
+  /// before the remote stream arrives — the choice is applied on arrival.
+  bool setRemoteAudioMuted(bool muted) {
+    remoteAudioMuted.value = muted;
+    _applyRemoteAudioMuted();
+    return muted;
+  }
+
+  /// Flips the current mute state; returns the new value.
+  bool toggleRemoteAudioMuted() =>
+      setRemoteAudioMuted(!remoteAudioMuted.value);
+
+  void _applyRemoteAudioMuted() {
+    final stream = _remoteStream;
+    if (stream == null) return;
+    final enabled = !remoteAudioMuted.value;
+    for (final track in stream.getAudioTracks()) {
+      track.enabled = enabled;
+    }
   }
 
   /// Tears down the peer connection and local media. When [deleteCall] is true
