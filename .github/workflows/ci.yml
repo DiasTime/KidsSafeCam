@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Dart / Flutter: static analysis across all packages + shared unit tests.
+  # ----------------------------------------------------------------------------
+  flutter:
+    name: Flutter analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.3"
+          channel: stable
+          cache: true
+
+      # melos.yaml is the legacy (melos.yaml-driven) format; pin a 3.x release
+      # that supports `melos bootstrap` + the `scripts:` block this repo uses.
+      - name: Activate Melos
+        run: |
+          dart pub global activate melos 3.4.0
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Bootstrap workspace
+        run: melos bootstrap
+
+      - name: Analyze
+        run: melos run analyze
+
+      - name: Test
+        run: melos run test
+
+  # ----------------------------------------------------------------------------
+  # Firestore security rules: emulator-based allow/deny matrix (14 tests).
+  # ----------------------------------------------------------------------------
+  firestore-rules:
+    name: Firestore rules tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/firestore
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/firestore/package-lock.json
+
+      # The Firestore emulator runs on the JVM.
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run rules tests (emulator)
+        run: npm test
+
+  # ----------------------------------------------------------------------------
+  # Cloud Functions: lint + emulator-based pairing/TURN logic tests (10 tests).
+  # ----------------------------------------------------------------------------
+  functions:
+    name: Cloud Functions lint & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/functions/package-lock.json
+
+      # `test:emulator` boots the Firestore emulator (JVM) before the tests.
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Run function tests (emulator)
+        run: npm run test:emulator
