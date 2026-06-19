@@ -30,7 +30,7 @@ class EventHistoryPage extends ConsumerWidget {
           }
           return ListView.separated(
             itemCount: list.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, i) => _EventTile(event: list[i]),
           );
         },
@@ -49,7 +49,7 @@ class _EventTile extends StatelessWidget {
     final display = _displayFor(event.type);
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: display.color.withOpacity(0.15),
+        backgroundColor: display.color.withValues(alpha: 0.15),
         child: Icon(display.icon, color: display.color),
       ),
       title: Text(display.label),

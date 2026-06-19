@@ -46,7 +46,7 @@ class HomePage extends ConsumerWidget {
           }
           return ListView.separated(
             itemCount: list.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, i) => _DeviceTile(device: list[i]),
           );
         },

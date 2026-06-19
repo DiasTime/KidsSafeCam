@@ -18,8 +18,9 @@ Future<void> main() async {
   // use the debug provider (register the printed token in the Firebase console);
   // release builds attest via Play Integrity.
   await FirebaseAppCheck.instance.activate(
-    androidProvider:
-        kReleaseMode ? AndroidProvider.playIntegrity : AndroidProvider.debug,
+    providerAndroid: kReleaseMode
+        ? const AndroidPlayIntegrityProvider()
+        : const AndroidDebugProvider(),
   );
   runApp(const ProviderScope(child: CameraApp()));
 }

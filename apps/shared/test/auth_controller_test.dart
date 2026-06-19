@@ -50,7 +50,7 @@ ProviderContainer _container(AuthRepository repo) {
     overrides: [authRepositoryProvider.overrideWithValue(repo)],
   );
   // Keep the auto-dispose controller alive for the duration of the test.
-  container.listen(authControllerProvider, (_, __) {});
+  container.listen(authControllerProvider, (_, _) {});
   return container;
 }
 

@@ -1,5 +1,5 @@
 /// Public API of the shared package consumed by camera_app and parent_app.
-library ai_baby_monitor_shared;
+library;
 
 // Domain entities
 export 'src/domain/entities/app_notification.dart';

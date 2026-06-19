@@ -4,33 +4,35 @@ publish_to: "none"
 version: 0.1.0
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
-  flutter: ">=3.22.0"
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: ">=3.38.0"
 
 dependencies:
   flutter:
     sdk: flutter
   # Firebase
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.1
-  cloud_firestore: ^5.4.4
-  firebase_messaging: ^15.1.3
-  cloud_functions: ^5.1.3
-  firebase_app_check: ^0.3.1
+  firebase_core: ^4.11.0
+  firebase_auth: ^6.5.3
+  cloud_firestore: ^6.6.0
+  firebase_messaging: ^16.4.0
+  cloud_functions: ^6.3.3
+  firebase_app_check: ^0.4.5
   # Real-time media
-  flutter_webrtc: ^0.12.5
-  # State management + DI
+  flutter_webrtc: ^1.5.2
+  # State management + DI. Held at the latest 2.x: Riverpod 3's manual
+  # (non-codegen) family-notifier API is a disruptive migration; 2.6.1 resolves
+  # cleanly with every other upgraded package.
   flutter_riverpod: ^2.6.1
   # Routing
-  go_router: ^14.3.0
+  go_router: ^17.3.0
   # Value equality for entities
   equatable: ^2.0.5
   # Secure token storage
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^10.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
   # In-memory Firestore for testing the signaling client without the emulator.
-  fake_cloud_firestore: ^3.0.0
+  fake_cloud_firestore: ^4.1.1
