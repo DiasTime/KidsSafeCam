@@ -25,8 +25,8 @@ class WebRtcSession {
     required this.deviceId,
     required this.callId,
     required List<Map<String, dynamic>> iceServers,
-  })  : _signaling = signaling,
-        _iceServers = iceServers;
+  }) : _signaling = signaling,
+       _iceServers = iceServers;
 
   final SignalingClient _signaling;
   final List<Map<String, dynamic>> _iceServers;
@@ -44,8 +44,9 @@ class WebRtcSession {
 
   /// Latest peer-connection state — drives a connecting / connected /
   /// disconnected indicator in the UI.
-  final ValueNotifier<RTCPeerConnectionState> connectionState =
-      ValueNotifier(RTCPeerConnectionState.RTCPeerConnectionStateNew);
+  final ValueNotifier<RTCPeerConnectionState> connectionState = ValueNotifier(
+    RTCPeerConnectionState.RTCPeerConnectionStateNew,
+  );
 
   /// Whether the remote (camera) audio is currently muted on this side
   /// (Step 7). Muting just disables the received audio tracks locally, so
@@ -75,9 +76,9 @@ class WebRtcSession {
   bool _ownsLocalStream = true;
 
   Map<String, dynamic> get _config => {
-        'iceServers': _iceServers,
-        'sdpSemantics': 'unified-plan',
-      };
+    'iceServers': _iceServers,
+    'sdpSemantics': 'unified-plan',
+  };
 
   Future<RTCPeerConnection> _createPeerConnection() async {
     final pc = await createPeerConnection(_config);
@@ -122,8 +123,10 @@ class WebRtcSession {
     var pushToTalk = false;
     if (enablePushToTalk) {
       try {
-        final mic = await navigator.mediaDevices
-            .getUserMedia({'audio': true, 'video': false});
+        final mic = await navigator.mediaDevices.getUserMedia({
+          'audio': true,
+          'video': false,
+        });
         _ownsLocalStream = true;
         _localStream = mic;
         for (final track in mic.getAudioTracks()) {
@@ -147,16 +150,20 @@ class WebRtcSession {
     await pc.setLocalDescription(offer);
     await _signaling.setOffer(deviceId, callId, offer);
 
-    _subs.add(_signaling.watchAnswer(deviceId, callId).listen((answer) async {
-      if (answer == null || _remoteDescriptionSet || _disposed) return;
-      await pc.setRemoteDescription(answer);
-      _remoteDescriptionSet = true;
-      await _flushPendingCandidates();
-    }));
+    _subs.add(
+      _signaling.watchAnswer(deviceId, callId).listen((answer) async {
+        if (answer == null || _remoteDescriptionSet || _disposed) return;
+        await pc.setRemoteDescription(answer);
+        _remoteDescriptionSet = true;
+        await _flushPendingCandidates();
+      }),
+    );
 
-    _subs.add(_signaling
-        .watchCalleeCandidates(deviceId, callId)
-        .listen(_addRemoteCandidate));
+    _subs.add(
+      _signaling
+          .watchCalleeCandidates(deviceId, callId)
+          .listen(_addRemoteCandidate),
+    );
   }
 
   // ── Camera (callee) ────────────────────────────────────────────────
@@ -172,7 +179,8 @@ class WebRtcSession {
     };
 
     _ownsLocalStream = localStream == null;
-    _localStream = localStream ??
+    _localStream =
+        localStream ??
         await navigator.mediaDevices.getUserMedia({
           'audio': true,
           'video': {
@@ -198,9 +206,11 @@ class WebRtcSession {
     await pc.setLocalDescription(answer);
     await _signaling.setAnswer(deviceId, callId, answer);
 
-    _subs.add(_signaling
-        .watchCallerCandidates(deviceId, callId)
-        .listen(_addRemoteCandidate));
+    _subs.add(
+      _signaling
+          .watchCallerCandidates(deviceId, callId)
+          .listen(_addRemoteCandidate),
+    );
   }
 
   Future<void> _addRemoteCandidate(RTCIceCandidate candidate) async {
@@ -230,8 +240,7 @@ class WebRtcSession {
   }
 
   /// Flips the current mute state; returns the new value.
-  bool toggleRemoteAudioMuted() =>
-      setRemoteAudioMuted(!remoteAudioMuted.value);
+  bool toggleRemoteAudioMuted() => setRemoteAudioMuted(!remoteAudioMuted.value);
 
   void _applyRemoteAudioMuted() {
     final stream = _remoteStream;

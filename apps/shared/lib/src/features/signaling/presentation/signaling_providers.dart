@@ -22,8 +22,9 @@ final iceConfigProvider = FutureProvider<IceConfig>((ref) async {
 /// [iceConfigProvider], falling back to public STUN if the Cloud Function is
 /// unavailable (e.g. not yet deployed, or offline on a LAN). This is what the
 /// streaming controllers consume.
-final iceServersProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final iceServersProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   try {
     final config = await ref.watch(iceConfigProvider.future);
     if (config.iceServers.isNotEmpty) return config.iceServers;

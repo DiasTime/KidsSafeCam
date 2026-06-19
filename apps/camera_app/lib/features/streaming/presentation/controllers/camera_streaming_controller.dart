@@ -55,7 +55,8 @@ class CameraStreamingState {
 /// active: keeps a local preview running and answers parent calls as they
 /// appear on this device's `calls` subcollection. Full background operation is
 /// Step 9; this listener only lives as long as the screen is mounted.
-class CameraStreamingController extends AutoDisposeNotifier<CameraStreamingState> {
+class CameraStreamingController
+    extends AutoDisposeNotifier<CameraStreamingState> {
   final RTCVideoRenderer localRenderer = RTCVideoRenderer();
 
   MediaStream? _previewStream;
@@ -96,9 +97,7 @@ class CameraStreamingController extends AutoDisposeNotifier<CameraStreamingState
       state = state.copyWith(previewReady: true, clearError: true);
     } catch (e) {
       if (_disposed) return;
-      state = state.copyWith(
-        errorMessage: 'Could not start the camera: $e',
-      );
+      state = state.copyWith(errorMessage: 'Could not start the camera: $e');
     }
   }
 
@@ -161,6 +160,7 @@ class CameraStreamingController extends AutoDisposeNotifier<CameraStreamingState
 }
 
 final cameraStreamingControllerProvider =
-    AutoDisposeNotifierProvider<CameraStreamingController, CameraStreamingState>(
-  CameraStreamingController.new,
-);
+    AutoDisposeNotifierProvider<
+      CameraStreamingController,
+      CameraStreamingState
+    >(CameraStreamingController.new);

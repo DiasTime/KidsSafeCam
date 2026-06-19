@@ -19,6 +19,7 @@ final notificationsProvider = StreamProvider<List<AppNotification>>((ref) {
 
 /// Count of unread notifications — drives a badge on the parent home screen.
 final unreadNotificationCountProvider = Provider<int>((ref) {
-  final notifications = ref.watch(notificationsProvider).valueOrNull ?? const [];
+  final notifications =
+      ref.watch(notificationsProvider).valueOrNull ?? const [];
   return notifications.where((n) => !n.read).length;
 });

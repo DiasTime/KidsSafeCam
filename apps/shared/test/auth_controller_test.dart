@@ -32,10 +32,7 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AppUser> signUp({
-    required String email,
-    required String password,
-  }) =>
+  Future<AppUser> signUp({required String email, required String password}) =>
       signIn(email: email, password: password);
 
   @override
@@ -87,7 +84,9 @@ void main() {
   });
 
   test('authErrorMessage falls back for non-auth errors', () {
-    expect(authErrorMessage(Exception('boom')),
-        'Something went wrong. Please try again.');
+    expect(
+      authErrorMessage(Exception('boom')),
+      'Something went wrong. Please try again.',
+    );
   });
 }

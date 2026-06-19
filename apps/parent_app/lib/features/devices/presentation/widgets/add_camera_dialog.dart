@@ -33,9 +33,9 @@ class _AddCameraDialogState extends ConsumerState<AddCameraDialog> {
     final ok = await ref.read(claimControllerProvider.notifier).claim(code);
     if (ok && mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera paired')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Camera paired')));
     }
   }
 

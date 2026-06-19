@@ -25,14 +25,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             const LoginPage(title: 'Baby Monitor — Camera'),
       ),
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const CameraHomePage(),
-      ),
-      GoRoute(
-        path: '/pair',
-        builder: (context, state) => const PairingPage(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const CameraHomePage()),
+      GoRoute(path: '/pair', builder: (context, state) => const PairingPage()),
     ],
   );
 });

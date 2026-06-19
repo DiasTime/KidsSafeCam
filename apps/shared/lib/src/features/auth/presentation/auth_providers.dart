@@ -24,15 +24,19 @@ class AuthController extends AutoDisposeAsyncNotifier<void> {
   FutureOr<void> build() {}
 
   Future<bool> signIn({required String email, required String password}) {
-    return _run(() => ref
-        .read(authRepositoryProvider)
-        .signIn(email: email, password: password));
+    return _run(
+      () => ref
+          .read(authRepositoryProvider)
+          .signIn(email: email, password: password),
+    );
   }
 
   Future<bool> signUp({required String email, required String password}) {
-    return _run(() => ref
-        .read(authRepositoryProvider)
-        .signUp(email: email, password: password));
+    return _run(
+      () => ref
+          .read(authRepositoryProvider)
+          .signUp(email: email, password: password),
+    );
   }
 
   Future<void> signOut() => ref.read(authRepositoryProvider).signOut();

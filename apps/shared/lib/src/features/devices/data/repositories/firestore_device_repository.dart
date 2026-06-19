@@ -9,7 +9,7 @@ import '../models/device_model.dart';
 /// the security rules also enforce.
 class FirestoreDeviceRepository implements DeviceRepository {
   FirestoreDeviceRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -41,8 +41,10 @@ class FirestoreDeviceRepository implements DeviceRepository {
         .where('cameraUid', isEqualTo: cameraUid)
         .limit(1)
         .snapshots()
-        .map((snap) =>
-            snap.docs.isEmpty ? null : DeviceModel.fromDoc(snap.docs.first));
+        .map(
+          (snap) =>
+              snap.docs.isEmpty ? null : DeviceModel.fromDoc(snap.docs.first),
+        );
   }
 
   @override
@@ -55,9 +57,9 @@ class FirestoreDeviceRepository implements DeviceRepository {
     required String deviceId,
     required DeviceSettings settings,
   }) {
-    return _devices
-        .doc(deviceId)
-        .update({'settings': DeviceModel.settingsToMap(settings)});
+    return _devices.doc(deviceId).update({
+      'settings': DeviceModel.settingsToMap(settings),
+    });
   }
 
   @override

@@ -11,9 +11,7 @@ import 'firebase_options.dart';
 /// Entry point for the Camera app.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // App Check guards the callable Cloud Functions (pairing + TURN). Debug builds
   // use the debug provider (register the printed token in the Firebase console);
   // release builds attest via Play Integrity.

@@ -7,26 +7,29 @@ import 'package:flutter_test/flutter_test.dart';
 /// arrives must still track the desired state so it can be applied on arrival.
 void main() {
   WebRtcSession buildSession() => WebRtcSession(
-        signaling: SignalingClient(firestore: FakeFirebaseFirestore()),
-        deviceId: 'device-1',
-        callId: 'call-1',
-        iceServers: const [],
-      );
+    signaling: SignalingClient(firestore: FakeFirebaseFirestore()),
+    deviceId: 'device-1',
+    callId: 'call-1',
+    iceServers: const [],
+  );
 
   test('remote audio starts unmuted', () {
     final session = buildSession();
     expect(session.remoteAudioMuted.value, isFalse);
   });
 
-  test('setRemoteAudioMuted updates the notifier and returns the new state', () {
-    final session = buildSession();
+  test(
+    'setRemoteAudioMuted updates the notifier and returns the new state',
+    () {
+      final session = buildSession();
 
-    expect(session.setRemoteAudioMuted(true), isTrue);
-    expect(session.remoteAudioMuted.value, isTrue);
+      expect(session.setRemoteAudioMuted(true), isTrue);
+      expect(session.remoteAudioMuted.value, isTrue);
 
-    expect(session.setRemoteAudioMuted(false), isFalse);
-    expect(session.remoteAudioMuted.value, isFalse);
-  });
+      expect(session.setRemoteAudioMuted(false), isFalse);
+      expect(session.remoteAudioMuted.value, isFalse);
+    },
+  );
 
   test('toggleRemoteAudioMuted flips the state each call', () {
     final session = buildSession();
@@ -46,11 +49,14 @@ void main() {
   });
 
   // ── Step 8 — push-to-talk state machine ────────────────────────────
-  test('push-to-talk starts released and unavailable before a mic is added', () {
-    final session = buildSession();
-    expect(session.talking.value, isFalse);
-    expect(session.talkAvailable.value, isFalse);
-  });
+  test(
+    'push-to-talk starts released and unavailable before a mic is added',
+    () {
+      final session = buildSession();
+      expect(session.talking.value, isFalse);
+      expect(session.talkAvailable.value, isFalse);
+    },
+  );
 
   test('setTalking updates the talking notifier and returns the new state', () {
     final session = buildSession();

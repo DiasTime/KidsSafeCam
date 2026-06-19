@@ -25,14 +25,13 @@ class EventModel {
     required String ownerId,
     required BabyEventType type,
     Map<String, dynamic> metadata = const {},
-  }) =>
-      {
-        'deviceId': deviceId,
-        'ownerId': ownerId,
-        'type': type.wireName,
-        'timestamp': FieldValue.serverTimestamp(),
-        if (metadata.isNotEmpty) 'metadata': metadata,
-      };
+  }) => {
+    'deviceId': deviceId,
+    'ownerId': ownerId,
+    'type': type.wireName,
+    'timestamp': FieldValue.serverTimestamp(),
+    if (metadata.isNotEmpty) 'metadata': metadata,
+  };
 
   static DateTime? _toDate(dynamic value) {
     if (value is Timestamp) return value.toDate();

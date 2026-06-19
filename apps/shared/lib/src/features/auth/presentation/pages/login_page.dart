@@ -131,9 +131,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     onPressed: isLoading
                         ? null
                         : () => setState(() => _isSignUp = !_isSignUp),
-                    child: Text(_isSignUp
-                        ? 'Already have an account? Sign in'
-                        : "Don't have an account? Sign up"),
+                    child: Text(
+                      _isSignUp
+                          ? 'Already have an account? Sign in'
+                          : "Don't have an account? Sign up",
+                    ),
                   ),
                 ],
               ),

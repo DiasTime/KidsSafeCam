@@ -32,8 +32,8 @@ class ClaimController extends AutoDisposeAsyncNotifier<String?> {
 
 final claimControllerProvider =
     AutoDisposeAsyncNotifierProvider<ClaimController, String?>(
-  ClaimController.new,
-);
+      ClaimController.new,
+    );
 
 /// Friendly message for a pairing failure. The Cloud Functions already return
 /// user-facing messages (e.g. "This code has expired."), so we surface those.

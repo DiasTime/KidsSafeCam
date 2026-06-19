@@ -25,10 +25,10 @@ class DeviceModel {
   }
 
   static Map<String, dynamic> settingsToMap(DeviceSettings s) => {
-        'nightMode': s.nightMode,
-        'aiSensitivity': s.aiSensitivity,
-        'notificationsEnabled': s.notificationsEnabled,
-      };
+    'nightMode': s.nightMode,
+    'aiSensitivity': s.aiSensitivity,
+    'notificationsEnabled': s.notificationsEnabled,
+  };
 
   static DateTime? _toDate(dynamic value) {
     if (value is Timestamp) return value.toDate();

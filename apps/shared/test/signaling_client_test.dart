@@ -55,8 +55,12 @@ void main() {
     await client.addCalleeCandidate(deviceId, callId, calleeCandidate);
 
     // The callee reads caller candidates; the caller reads callee candidates.
-    final fromCaller = await client.watchCallerCandidates(deviceId, callId).first;
-    final fromCallee = await client.watchCalleeCandidates(deviceId, callId).first;
+    final fromCaller = await client
+        .watchCallerCandidates(deviceId, callId)
+        .first;
+    final fromCallee = await client
+        .watchCalleeCandidates(deviceId, callId)
+        .first;
 
     expect(fromCaller.candidate, 'candidate:caller');
     expect(fromCaller.sdpMLineIndex, 0);
@@ -71,7 +75,10 @@ void main() {
 
     // A parent posts an offer with no answer yet → should be surfaced.
     await client.setOffer(
-        deviceId, 'pending-call', RTCSessionDescription('sdp', 'offer'));
+      deviceId,
+      'pending-call',
+      RTCSessionDescription('sdp', 'offer'),
+    );
     await pumpEventQueue();
 
     // An already-answered call → should be ignored.
@@ -81,9 +88,9 @@ void main() {
         .collection('calls')
         .doc('answered-call')
         .set({
-      'offer': {'sdp': 'sdp', 'type': 'offer'},
-      'answer': {'sdp': 'sdp', 'type': 'answer'},
-    });
+          'offer': {'sdp': 'sdp', 'type': 'offer'},
+          'answer': {'sdp': 'sdp', 'type': 'answer'},
+        });
     await pumpEventQueue();
 
     expect(emitted, ['pending-call']);
@@ -93,9 +100,15 @@ void main() {
   test('deleteCall removes the call document and its candidates', () async {
     final callId = client.newCallId(deviceId);
     await client.setOffer(
-        deviceId, callId, RTCSessionDescription('sdp', 'offer'));
+      deviceId,
+      callId,
+      RTCSessionDescription('sdp', 'offer'),
+    );
     await client.addCallerCandidate(
-        deviceId, callId, RTCIceCandidate('candidate:x', '0', 0));
+      deviceId,
+      callId,
+      RTCIceCandidate('candidate:x', '0', 0),
+    );
 
     await client.deleteCall(deviceId, callId);
 

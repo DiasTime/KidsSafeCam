@@ -10,7 +10,7 @@ import '../models/event_model.dart';
 /// `backend/firestore/firestore.indexes.json` (ownerId, timestamp desc).
 class FirestoreEventRepository implements EventRepository {
   FirestoreEventRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -34,12 +34,14 @@ class FirestoreEventRepository implements EventRepository {
     required BabyEventType type,
     Map<String, dynamic> metadata = const {},
   }) async {
-    final ref = await _events.add(EventModel.toMap(
-      deviceId: deviceId,
-      ownerId: ownerId,
-      type: type,
-      metadata: metadata,
-    ));
+    final ref = await _events.add(
+      EventModel.toMap(
+        deviceId: deviceId,
+        ownerId: ownerId,
+        type: type,
+        metadata: metadata,
+      ),
+    );
     return ref.id;
   }
 }
