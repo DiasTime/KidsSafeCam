@@ -11,6 +11,9 @@ class LiveViewState {
   const LiveViewState({
     this.rendererReady = false,
     this.hasRemoteVideo = false,
+    this.isMuted = false,
+    this.canTalk = false,
+    this.isTalking = false,
     this.callState,
     this.errorMessage,
   });
@@ -20,6 +23,15 @@ class LiveViewState {
 
   /// True once the camera's remote stream has been attached.
   final bool hasRemoteVideo;
+
+  /// True when the parent has muted the camera's audio (Step 7).
+  final bool isMuted;
+
+  /// True when push-to-talk is available (the parent's mic was captured, Step 8).
+  final bool canTalk;
+
+  /// True while the parent is holding the talk button and transmitting.
+  final bool isTalking;
 
   /// Peer-connection state, mapped to a connecting / connected / disconnected
   /// indicator in the UI.
@@ -38,6 +50,9 @@ class LiveViewState {
   LiveViewState copyWith({
     bool? rendererReady,
     bool? hasRemoteVideo,
+    bool? isMuted,
+    bool? canTalk,
+    bool? isTalking,
     RTCPeerConnectionState? callState,
     String? errorMessage,
     bool clearError = false,
@@ -45,6 +60,9 @@ class LiveViewState {
     return LiveViewState(
       rendererReady: rendererReady ?? this.rendererReady,
       hasRemoteVideo: hasRemoteVideo ?? this.hasRemoteVideo,
+      isMuted: isMuted ?? this.isMuted,
+      canTalk: canTalk ?? this.canTalk,
+      isTalking: isTalking ?? this.isTalking,
       callState: callState ?? this.callState,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -99,10 +117,35 @@ class LiveViewController
       });
 
       await session.connectAsCaller();
+      if (_disposed) return;
+      state = state.copyWith(canTalk: session.talkAvailable.value);
     } catch (e) {
       if (_disposed) return;
       state = state.copyWith(errorMessage: 'Could not start live view: $e');
     }
+  }
+
+  /// Mutes / unmutes the camera's audio locally (Step 7). No-op until the
+  /// session exists; the session re-applies the choice when its stream arrives.
+  void toggleMute() {
+    final session = _session;
+    if (session == null) return;
+    state = state.copyWith(isMuted: session.toggleRemoteAudioMuted());
+  }
+
+  /// Push-to-talk (Step 8): start transmitting the parent's mic to the camera
+  /// while the talk button is held.
+  void startTalking() {
+    final session = _session;
+    if (session == null) return;
+    state = state.copyWith(isTalking: session.setTalking(true));
+  }
+
+  /// Stop transmitting when the talk button is released.
+  void stopTalking() {
+    final session = _session;
+    if (session == null) return;
+    state = state.copyWith(isTalking: session.setTalking(false));
   }
 
   /// Ends the call: closes the peer connection and removes its signaling docs.

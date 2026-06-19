@@ -129,24 +129,79 @@ Camera publishes video (+ audio) track; parent renders it via `RTCVideoView`.
 
 **Done when:** parent sees live video < 500 ms latency on LAN.
 
-## Step 7 — Audio streaming  ⬜
+## Step 7 — Audio streaming  🚧
 Camera publishes audio; parent plays it with mute control.
+
+- ✅ Audio already flows end-to-end from Step 6: the camera captures audio in
+  `getUserMedia` and the parent offers a `recvonly` audio transceiver, so the
+  camera's microphone track is published and received with the video.
+- ✅ Parent-side **mute control** in `WebRtcSession` (`setRemoteAudioMuted` /
+  `toggleRemoteAudioMuted` + a `remoteAudioMuted` notifier): disables the
+  received audio tracks locally so playback stops instantly without
+  renegotiating. A mute chosen before the stream arrives is applied on arrival.
+- ✅ `LiveViewController.toggleMute` + `LiveViewState.isMuted`; the live-view
+  app bar shows a volume/mute toggle once remote media is attached.
+- ✅ **+4 shared unit tests** for the mute state machine (`webrtc_session_test.dart`).
+- ⬜ Two-device check that the parent actually *hears* the camera and that mute
+  silences it (needs real devices/emulator — unavailable in the web-only dev env).
+
 **Done when:** parent hears live audio; mute works.
 
-## Step 8 — Two-way communication (push-to-talk)  ⬜
+## Step 8 — Two-way communication (push-to-talk)  🚧
 Parent → camera audio track gated by a push-to-talk button.
+
+- ✅ Parent (caller) now captures its microphone and publishes it on a
+  `sendrecv` audio line; the outgoing track starts **disabled**, so nothing is
+  transmitted until the button is held. Falls back to listen-only if the mic is
+  denied/unavailable (`talkAvailable` reflects this).
+- ✅ `WebRtcSession.setTalking` / `toggleTalking` + `talking` / `talkAvailable`
+  notifiers gate the outgoing track's `enabled` flag — no renegotiation.
+- ✅ Camera (callee) receives the parent's audio on the same audio transceiver
+  (its `addTrack` makes the line sendrecv) and plays it automatically.
+- ✅ `LiveViewController.startTalking` / `stopTalking` + `canTalk` / `isTalking`;
+  a **hold-to-talk** button appears in the live view when talk is available.
+- ✅ **+4 shared unit tests** for the push-to-talk state machine.
+- ⬜ Two-device check that holding the button is audible on the camera (needs
+  real devices/emulator — unavailable in the web-only dev env).
+
 **Done when:** speaking on the parent app is audible on the camera.
 
 ## Step 9 — Background + auto-reconnect  ⬜
 Android foreground service, iOS background audio/VoIP; heartbeats + ICE-restart reconnect.
 **Done when:** stream survives app backgrounding and brief network drops.
 
-## Step 10 — Push notifications  ⬜
+## Step 10 — Push notifications  🚧
 FCM token registration; `connection_lost` / device-offline notifications via triggered functions.
+
+- ✅ Server fan-out (`fanOutEventNotification`): on a new event it writes an
+  in-app notification and pushes to all of the owner's registered FCM tokens,
+  with the injectable sender making it emulator-testable (**+4 function tests**,
+  14 total). The `onEventCreated` trigger delegates to it.
+- ✅ `EVENT_NOTIFICATION_COPY` provides the per-type push title/body (incl.
+  `connection_lost`).
+- ⬜ Client **FCM token registration** (`firebase_messaging` → `users/{uid}.fcmTokens`)
+  and the heartbeat-timeout function that emits `connection_lost` — both pending
+  (token registration needs the plugin + native APNs/FCM config; the offline
+  detector belongs with Step 9's heartbeats).
+
 **Done when:** offline camera produces a push within the heartbeat window.
 
-## Step 11 — Event history  ⬜
+## Step 11 — Event history  🚧
 `events` write/read paths; notification fan-out function; parent event-history UI.
+
+- ✅ `events` read/write data layer in `shared`: `EventRepository` +
+  `FirestoreEventRepository` (`watchEvents` by owner, newest-first to match the
+  composite index; `addEvent` for on-device producers) + `EventModel` mapping
+  + `eventsProvider`. **+2 unit tests** (`fake_cloud_firestore`).
+- ✅ `notifications` read layer: `NotificationRepository` +
+  `FirestoreNotificationRepository` (`watchNotifications`, `markRead`) +
+  `notificationsProvider` / `unreadNotificationCountProvider`. **+2 unit tests**.
+- ✅ Notification fan-out function (see Step 10) writes the history rows.
+- ✅ Parent **event-history UI** (`/events`): an "Activity" app-bar action with an
+  unread badge opens a per-type, newest-first list of events.
+- ⬜ End-to-end verify against the live project (needs Functions deployed + a
+  real device producing events).
+
 **Done when:** events appear in history and generate notifications.
 
 ## Step 12 — Cry detection AI  ⬜
@@ -173,7 +228,7 @@ motion/night mode, web dashboard, subscriptions.
 ## Current focus
 
 **Steps 0–5 complete** (Foundations → Auth → Firestore rules → Pairing → Signaling).
-Backend is emulator-verified (14 rules tests + 10 function tests). The Flutter layer has
+Backend is emulator-verified (14 rules tests + 14 function tests). The Flutter layer has
 now been compiled on a real SDK: native (android/ios) + web platforms generated, both apps
 `flutter analyze` clean and `flutter build web`, and **18 shared unit tests** pass.
 
@@ -184,7 +239,28 @@ live-view screen with status + hang-up (full call lifecycle). Remaining for Step
 two-device < 500 ms LAN latency check (needs real devices/emulator — unavailable in the current
 web-only dev environment).
 
-**Next: Step 7 — Audio streaming** (mute control) builds directly on this.
+**Step 7 — Audio streaming: implemented (code-complete).** Audio rides the same
+peer connection established in Step 6; this step adds parent-side mute control
+(`WebRtcSession.toggleRemoteAudioMuted` → `LiveViewController.toggleMute` → a
+volume toggle in the live-view app bar) plus 4 unit tests. Remaining: the
+two-device check that the parent hears live audio and that mute silences it
+(needs real devices/emulator).
+
+**Step 8 — Two-way push-to-talk: implemented (code-complete).** The parent
+publishes its mic on a sendrecv audio line (disabled until held), the camera
+receives and plays it, and a hold-to-talk button gates transmission
+(`WebRtcSession.setTalking` → `LiveViewController.startTalking/stopTalking`)
+plus 4 unit tests. Remaining: the two-device audible check (needs real devices).
+
+**Steps 10–11 — Notifications & event history: backend + read layer done.** The
+event→notification fan-out is now extracted and **emulator-tested** (`fanOutEventNotification`,
++4 function tests → 14 total), the `shared` package gained `events`/`notifications`
+read layers (+4 unit tests), and the parent has an Activity screen with an unread
+badge. Remaining: client FCM token registration + the `connection_lost` heartbeat
+detector (with Step 9), and a live end-to-end pass.
+
+**Next: Step 9 — Background + auto-reconnect** (Android foreground service,
+heartbeats, ICE-restart) — largely native/device work.
 
 ### Outstanding owner/console tasks (not code)
 - Rotate the previously-exposed service-account key.

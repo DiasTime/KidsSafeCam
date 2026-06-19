@@ -196,7 +196,10 @@ See **SECURITY.md** for the threat model and the encryption/privacy design in fu
 | Pairing (`requestPairingCode` / `claimPairingCode`) | ✅ implemented, 7 tests |
 | Signaling (`SignalingClient`) + ephemeral TURN (`getTurnCredentials`) | ✅ implemented, 3 tests |
 | WebRTC peer connection + media tracks/rendering | ✅ implemented (Step 6); two-device latency check pending |
-| Notifications, event history, on-device AI, premium | ⬜ later phases |
+| Audio streaming + parent-side mute control | ✅ implemented (Step 7); two-device audible check pending |
+| Two-way push-to-talk (parent → camera audio) | ✅ implemented (Step 8); two-device audible check pending |
+| Event→notification fan-out + history read layer/UI | ✅ implemented (Steps 10–11); client FCM token registration pending |
+| Background/reconnect, on-device AI, premium | ⬜ later phases |
 
 Backend logic is verified against the Firebase emulator. The Flutter layer is written to
 the same contracts but still needs a `flutter analyze` / device pass (no SDK in CI yet).

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../widgets/add_camera_dialog.dart';
+import '../widgets/activity_button.dart';
 
 /// Home (camera list) screen for the Parent app. Shows the signed-in user's
 /// devices with live online/offline status from Firestore.
@@ -20,6 +21,7 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('My Cameras'),
         actions: [
+          const ActivityButton(),
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
