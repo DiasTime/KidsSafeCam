@@ -10,7 +10,7 @@ import '../models/notification_model.dart';
 /// (userId, createdAt desc).
 class FirestoreNotificationRepository implements NotificationRepository {
   FirestoreNotificationRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -18,8 +18,10 @@ class FirestoreNotificationRepository implements NotificationRepository {
       _firestore.collection(FirestoreCollections.notifications);
 
   @override
-  Stream<List<AppNotification>> watchNotifications(String userId,
-      {int limit = 100}) {
+  Stream<List<AppNotification>> watchNotifications(
+    String userId, {
+    int limit = 100,
+  }) {
     return _notifications
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)

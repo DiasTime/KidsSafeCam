@@ -20,8 +20,7 @@ void main() {
       metadata: {'confidence': 0.9},
     );
 
-    final doc =
-        await firestore.collection('events').doc(id).get();
+    final doc = await firestore.collection('events').doc(id).get();
     expect(doc.exists, isTrue);
     expect(doc.get('ownerId'), 'parent1');
     expect(doc.get('type'), 'baby_cry');

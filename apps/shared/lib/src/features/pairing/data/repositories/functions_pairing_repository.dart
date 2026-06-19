@@ -6,7 +6,7 @@ import '../../domain/repositories/pairing_repository.dart';
 /// callable Cloud Functions.
 class FunctionsPairingRepository implements PairingRepository {
   FunctionsPairingRepository({FirebaseFunctions? functions})
-      : _functions = functions ?? FirebaseFunctions.instance;
+    : _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFunctions _functions;
 
@@ -18,8 +18,9 @@ class FunctionsPairingRepository implements PairingRepository {
     final data = result.data;
     return PairingCode(
       code: data['code'] as String,
-      expiresAt:
-          DateTime.fromMillisecondsSinceEpoch((data['expiresAt'] as num).toInt()),
+      expiresAt: DateTime.fromMillisecondsSinceEpoch(
+        (data['expiresAt'] as num).toInt(),
+      ),
     );
   }
 

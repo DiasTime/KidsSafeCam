@@ -30,7 +30,7 @@ class EventHistoryPage extends ConsumerWidget {
           }
           return ListView.separated(
             itemCount: list.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, i) => _EventTile(event: list[i]),
           );
         },
@@ -49,7 +49,7 @@ class _EventTile extends StatelessWidget {
     final display = _displayFor(event.type);
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: display.color.withOpacity(0.15),
+        backgroundColor: display.color.withValues(alpha: 0.15),
         child: Icon(display.icon, color: display.color),
       ),
       title: Text(display.label),
@@ -61,30 +61,30 @@ class _EventTile extends StatelessWidget {
 ({IconData icon, String label, Color color}) _displayFor(BabyEventType type) {
   switch (type) {
     case BabyEventType.babyCry:
-      return (icon: Icons.volume_up, label: 'Baby crying', color: Colors.orange);
+      return (
+        icon: Icons.volume_up,
+        label: 'Baby crying',
+        color: Colors.orange,
+      );
     case BabyEventType.fallDetected:
       return (
         icon: Icons.warning_amber_rounded,
         label: 'Possible fall',
-        color: Colors.red
+        color: Colors.red,
       );
     case BabyEventType.motionDetected:
       return (
         icon: Icons.directions_run,
         label: 'Motion detected',
-        color: Colors.blue
+        color: Colors.blue,
       );
     case BabyEventType.soundDetected:
-      return (
-        icon: Icons.hearing,
-        label: 'Loud sound',
-        color: Colors.purple
-      );
+      return (icon: Icons.hearing, label: 'Loud sound', color: Colors.purple);
     case BabyEventType.connectionLost:
       return (
         icon: Icons.wifi_off,
         label: 'Camera offline',
-        color: Colors.grey
+        color: Colors.grey,
       );
   }
 }
@@ -93,7 +93,9 @@ String _formatTime(DateTime t) {
   final local = t.toLocal();
   final now = DateTime.now();
   final sameDay =
-      local.year == now.year && local.month == now.month && local.day == now.day;
+      local.year == now.year &&
+      local.month == now.month &&
+      local.day == now.day;
   final hh = local.hour.toString().padLeft(2, '0');
   final mm = local.minute.toString().padLeft(2, '0');
   if (sameDay) return 'Today $hh:$mm';
@@ -103,7 +105,11 @@ String _formatTime(DateTime t) {
 }
 
 class _Empty extends StatelessWidget {
-  const _Empty({required this.icon, required this.title, required this.subtitle});
+  const _Empty({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
   final IconData icon;
   final String title;

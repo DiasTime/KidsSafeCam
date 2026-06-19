@@ -15,8 +15,9 @@ class CameraHomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(cameraStreamingControllerProvider);
-    final renderer =
-        ref.read(cameraStreamingControllerProvider.notifier).localRenderer;
+    final renderer = ref
+        .read(cameraStreamingControllerProvider.notifier)
+        .localRenderer;
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +31,8 @@ class CameraHomePage extends ConsumerWidget {
           IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).signOut(),
           ),
         ],
       ),
@@ -42,8 +44,7 @@ class CameraHomePage extends ConsumerWidget {
             child: state.previewReady
                 ? RTCVideoView(
                     renderer,
-                    objectFit:
-                        RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                     mirror: true,
                   )
                 : _PreviewPlaceholder(errorMessage: state.errorMessage),
@@ -74,7 +75,9 @@ class _PreviewPlaceholder extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              errorMessage == null ? Icons.videocam_outlined : Icons.videocam_off,
+              errorMessage == null
+                  ? Icons.videocam_outlined
+                  : Icons.videocam_off,
               size: 72,
               color: Colors.white70,
             ),
@@ -106,7 +109,8 @@ class _StatusBar extends StatelessWidget {
         color: Colors.orangeAccent,
       );
     } else if (state.hasViewer) {
-      final connected = state.callState ==
+      final connected =
+          state.callState ==
           RTCPeerConnectionState.RTCPeerConnectionStateConnected;
       status = connected
           ? (

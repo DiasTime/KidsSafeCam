@@ -162,7 +162,9 @@ class LiveViewController
   }
 }
 
-final liveViewControllerProvider = AutoDisposeNotifierProviderFamily<
-    LiveViewController, LiveViewState, String>(
-  LiveViewController.new,
-);
+final liveViewControllerProvider =
+    AutoDisposeNotifierProviderFamily<
+      LiveViewController,
+      LiveViewState,
+      String
+    >(LiveViewController.new);

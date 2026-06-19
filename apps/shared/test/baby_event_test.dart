@@ -5,7 +5,10 @@ void main() {
   group('BabyEventType', () {
     test('maps to and from wire names', () {
       expect(BabyEventType.babyCry.wireName, 'baby_cry');
-      expect(BabyEventType.fromWire('fall_detected'), BabyEventType.fallDetected);
+      expect(
+        BabyEventType.fromWire('fall_detected'),
+        BabyEventType.fallDetected,
+      );
     });
 
     test('unknown wire value falls back to soundDetected', () {

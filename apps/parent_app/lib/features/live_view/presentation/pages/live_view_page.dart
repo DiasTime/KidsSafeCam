@@ -37,9 +37,7 @@ class LiveViewPage extends ConsumerWidget {
               IconButton(
                 tooltip: state.isMuted ? 'Unmute' : 'Mute',
                 onPressed: controller.toggleMute,
-                icon: Icon(
-                  state.isMuted ? Icons.volume_off : Icons.volume_up,
-                ),
+                icon: Icon(state.isMuted ? Icons.volume_off : Icons.volume_up),
               ),
             _StatusChip(state: state),
           ],

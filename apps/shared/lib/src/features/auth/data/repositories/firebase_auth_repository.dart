@@ -9,8 +9,8 @@ import '../../domain/repositories/auth_repository.dart';
 /// provisions a `users/{uid}` profile document on sign-up.
 class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
@@ -25,8 +25,7 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Stream<AppUser?> authStateChanges() =>
-      _auth.authStateChanges().map(_toUser);
+  Stream<AppUser?> authStateChanges() => _auth.authStateChanges().map(_toUser);
 
   @override
   AppUser? get currentUser => _toUser(_auth.currentUser);

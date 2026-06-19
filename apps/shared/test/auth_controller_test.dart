@@ -32,10 +32,7 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AppUser> signUp({
-    required String email,
-    required String password,
-  }) =>
+  Future<AppUser> signUp({required String email, required String password}) =>
       signIn(email: email, password: password);
 
   @override
@@ -50,7 +47,7 @@ ProviderContainer _container(AuthRepository repo) {
     overrides: [authRepositoryProvider.overrideWithValue(repo)],
   );
   // Keep the auto-dispose controller alive for the duration of the test.
-  container.listen(authControllerProvider, (_, __) {});
+  container.listen(authControllerProvider, (_, _) {});
   return container;
 }
 
@@ -87,7 +84,9 @@ void main() {
   });
 
   test('authErrorMessage falls back for non-auth errors', () {
-    expect(authErrorMessage(Exception('boom')),
-        'Something went wrong. Please try again.');
+    expect(
+      authErrorMessage(Exception('boom')),
+      'Something went wrong. Please try again.',
+    );
   });
 }

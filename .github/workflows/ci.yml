@@ -11,12 +11,19 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+
 jobs:
   # ----------------------------------------------------------------------------
-  # Dart / Flutter: static analysis across all packages + shared unit tests.
+  # Dart / Flutter: format gate + static analysis across all packages + shared
+  # unit tests (with coverage) + web build verification for both apps.
   # ----------------------------------------------------------------------------
   flutter:
-    name: Flutter analyze & test
+    name: Flutter — format, analyze, test, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,28 +31,74 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.3"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      # melos.yaml is the legacy (melos.yaml-driven) format; pin a 3.x release
-      # that supports `melos bootstrap` + the `scripts:` block this repo uses.
-      - name: Activate Melos
+      # The app packages depend on `shared` by path, so a plain `pub get`
+      # resolves everything. `shared` is the only package with tests. Running
+      # the packages directly avoids Melos (the legacy melos.yaml can't drive
+      # `melos bootstrap` from a global install on Melos 3+).
+      - name: Resolve, format-check & analyze each package
         run: |
-          dart pub global activate melos 3.4.0
-          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+          set -e
+          for pkg in shared parent_app camera_app; do
+            echo "::group::$pkg"
+            cd "$GITHUB_WORKSPACE/apps/$pkg"
+            flutter pub get
+            dart format --output=none --set-exit-if-changed .
+            flutter analyze
+            echo "::endgroup::"
+          done
 
-      - name: Bootstrap workspace
-        run: melos bootstrap
+      - name: Test with coverage (shared)
+        working-directory: apps/shared
+        run: flutter test --coverage
 
-      - name: Analyze
-        run: melos run analyze
+      - name: Build web — parent_app
+        working-directory: apps/parent_app
+        run: flutter build web --release
 
-      - name: Test
-        run: melos run test
+      - name: Build web — camera_app
+        working-directory: apps/camera_app
+        run: flutter build web --release
+
+      - name: Upload shared coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-coverage
+          path: apps/shared/coverage/lcov.info
+          if-no-files-found: warn
+
+      - name: Upload parent_app web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent_app-web
+          path: apps/parent_app/build/web
+          if-no-files-found: warn
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          lcov="apps/shared/coverage/lcov.info"
+          {
+            echo "### Flutter — shared coverage"
+            if [ -f "$lcov" ]; then
+              total=$(grep -c '^DA:' "$lcov" || true)
+              hit=$(grep '^DA:' "$lcov" | awk -F, '$2 > 0' | wc -l || true)
+              if [ "${total:-0}" -gt 0 ]; then
+                pct=$(awk "BEGIN { printf \"%.1f\", ($hit/$total)*100 }")
+                echo "Lines covered: **$hit / $total ($pct%)**"
+              else
+                echo "No line data found."
+              fi
+            else
+              echo "No coverage file produced."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ----------------------------------------------------------------------------
-  # Firestore security rules: emulator-based allow/deny matrix (14 tests).
+  # Firestore security rules: emulator-based allow/deny matrix.
   # ----------------------------------------------------------------------------
   firestore-rules:
     name: Firestore rules tests
@@ -63,12 +116,12 @@ jobs:
           cache: npm
           cache-dependency-path: backend/firestore/package-lock.json
 
-      # The Firestore emulator runs on the JVM.
+      # The Firestore emulator runs on the JVM (firebase-tools needs JDK 21+).
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Install dependencies
         run: npm ci
@@ -77,10 +130,10 @@ jobs:
         run: npm test
 
   # ----------------------------------------------------------------------------
-  # Cloud Functions: lint + emulator-based pairing/TURN logic tests (10 tests).
+  # Cloud Functions: lint + build + emulator-based pairing/TURN/notification tests.
   # ----------------------------------------------------------------------------
   functions:
-    name: Cloud Functions lint & test
+    name: Cloud Functions — lint, build, test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -95,12 +148,11 @@ jobs:
           cache: npm
           cache-dependency-path: backend/functions/package-lock.json
 
-      # `test:emulator` boots the Firestore emulator (JVM) before the tests.
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Install dependencies
         run: npm ci
@@ -113,3 +165,27 @@ jobs:
 
       - name: Run function tests (emulator)
         run: npm run test:emulator
+
+  # ----------------------------------------------------------------------------
+  # Dependency vulnerability gate for the backend npm packages. Fails only on
+  # HIGH/CRITICAL advisories in *production* deps (moderate dev-tool advisories,
+  # e.g. inside firebase-tools, don't block the build).
+  # ----------------------------------------------------------------------------
+  audit:
+    name: npm audit (backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Audit Cloud Functions (production deps)
+        working-directory: backend/functions
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Audit Firestore tooling (production deps)
+        working-directory: backend/firestore
+        run: npm audit --audit-level=high --omit=dev

@@ -1,0 +1,91 @@
+name: Deploy
+
+# Continuous deployment of the backend (Firestore rules + indexes and Cloud
+# Functions) to the live `kidssafecam` project. Runs only after the CI workflow
+# succeeds on main, and only when a service-account secret is configured — so
+# it is a safe no-op on forks or until the owner sets `FIREBASE_SERVICE_ACCOUNT`.
+#
+# Setup (one time):
+#   1. Create a service account with the Firebase Admin + Cloud Functions Admin
+#      + Service Account User roles; download its JSON key.
+#   2. Repo → Settings → Secrets and variables → Actions → New secret
+#      `FIREBASE_SERVICE_ACCOUNT` = the full JSON.
+#   (Requires the project to be on the Blaze plan to deploy functions.)
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-firebase
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Firestore + Functions
+    runs-on: ubuntu-latest
+    # Only after a green CI run (workflow_dispatch has no workflow_run payload).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+
+      - name: Check for deploy credentials
+        id: guard
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::FIREBASE_SERVICE_ACCOUNT is not set — skipping deploy."
+            echo "Deploy skipped: set the FIREBASE_SERVICE_ACCOUNT secret to enable." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.guard.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/functions/package-lock.json
+
+      - name: Set up Java
+        if: steps.guard.outputs.configured == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Cloud Functions deps
+        if: steps.guard.outputs.configured == 'true'
+        working-directory: backend/functions
+        run: npm ci
+
+      - name: Write service-account credentials
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          ./backend/functions/node_modules/.bin/firebase deploy \
+            --only firestore,functions \
+            --project kidssafecam \
+            --non-interactive \
+            --force
+          echo "Deployed Firestore rules/indexes + Cloud Functions to kidssafecam." >> "$GITHUB_STEP_SUMMARY"
