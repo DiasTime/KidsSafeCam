@@ -1,5 +1,8 @@
 # AI Baby Monitor (KidsSafeCam)
 
+[![CI](https://github.com/DiasTime/KidsSafeCam/actions/workflows/ci.yml/badge.svg)](https://github.com/DiasTime/KidsSafeCam/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/DiasTime/KidsSafeCam/actions/workflows/codeql.yml/badge.svg)](https://github.com/DiasTime/KidsSafeCam/actions/workflows/codeql.yml)
+
 Turn an old smartphone into a secure, AI-assisted baby monitor.
 
 Two Flutter apps — a **Camera App** (runs on a spare phone near the baby) and a **Parent
@@ -83,3 +86,21 @@ melos run test
 Firebase is configured for the `kidssafecam` project; `firebase_options.dart` is committed
 (client config, not a secret). The native `google-services.json` / `GoogleService-Info.plist`
 are generated locally. See [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md).
+
+## CI / CD
+
+GitHub Actions run on every push and pull request:
+
+- **CI** (`.github/workflows/ci.yml`) — four jobs:
+  - *Flutter*: `dart format` gate, `flutter analyze`, shared unit tests **with
+    coverage** (uploaded as an artifact + a step summary), and a `flutter build web`
+    of both apps to catch build-time breakage.
+  - *Firestore rules* and *Cloud Functions*: emulator-based test suites (JDK 21).
+  - *npm audit*: fails on HIGH/CRITICAL advisories in the backend's production deps.
+- **CodeQL** (`.github/workflows/codeql.yml`) — security/quality scanning of the
+  backend TypeScript on push/PR to `main` and weekly.
+- **Deploy** (`.github/workflows/deploy.yml`) — after CI passes on `main`, deploys
+  Firestore rules/indexes + Cloud Functions to the live project. It is a safe no-op
+  until the `FIREBASE_SERVICE_ACCOUNT` repo secret is set (see the workflow header).
+- **Dependabot** (`.github/dependabot.yml`) — weekly grouped update PRs for the npm,
+  pub, and GitHub Actions dependencies.
