@@ -170,12 +170,38 @@ Parent → camera audio track gated by a push-to-talk button.
 Android foreground service, iOS background audio/VoIP; heartbeats + ICE-restart reconnect.
 **Done when:** stream survives app backgrounding and brief network drops.
 
-## Step 10 — Push notifications  ⬜
+## Step 10 — Push notifications  🚧
 FCM token registration; `connection_lost` / device-offline notifications via triggered functions.
+
+- ✅ Server fan-out (`fanOutEventNotification`): on a new event it writes an
+  in-app notification and pushes to all of the owner's registered FCM tokens,
+  with the injectable sender making it emulator-testable (**+4 function tests**,
+  14 total). The `onEventCreated` trigger delegates to it.
+- ✅ `EVENT_NOTIFICATION_COPY` provides the per-type push title/body (incl.
+  `connection_lost`).
+- ⬜ Client **FCM token registration** (`firebase_messaging` → `users/{uid}.fcmTokens`)
+  and the heartbeat-timeout function that emits `connection_lost` — both pending
+  (token registration needs the plugin + native APNs/FCM config; the offline
+  detector belongs with Step 9's heartbeats).
+
 **Done when:** offline camera produces a push within the heartbeat window.
 
-## Step 11 — Event history  ⬜
+## Step 11 — Event history  🚧
 `events` write/read paths; notification fan-out function; parent event-history UI.
+
+- ✅ `events` read/write data layer in `shared`: `EventRepository` +
+  `FirestoreEventRepository` (`watchEvents` by owner, newest-first to match the
+  composite index; `addEvent` for on-device producers) + `EventModel` mapping
+  + `eventsProvider`. **+2 unit tests** (`fake_cloud_firestore`).
+- ✅ `notifications` read layer: `NotificationRepository` +
+  `FirestoreNotificationRepository` (`watchNotifications`, `markRead`) +
+  `notificationsProvider` / `unreadNotificationCountProvider`. **+2 unit tests**.
+- ✅ Notification fan-out function (see Step 10) writes the history rows.
+- ✅ Parent **event-history UI** (`/events`): an "Activity" app-bar action with an
+  unread badge opens a per-type, newest-first list of events.
+- ⬜ End-to-end verify against the live project (needs Functions deployed + a
+  real device producing events).
+
 **Done when:** events appear in history and generate notifications.
 
 ## Step 12 — Cry detection AI  ⬜
@@ -202,7 +228,7 @@ motion/night mode, web dashboard, subscriptions.
 ## Current focus
 
 **Steps 0–5 complete** (Foundations → Auth → Firestore rules → Pairing → Signaling).
-Backend is emulator-verified (14 rules tests + 10 function tests). The Flutter layer has
+Backend is emulator-verified (14 rules tests + 14 function tests). The Flutter layer has
 now been compiled on a real SDK: native (android/ios) + web platforms generated, both apps
 `flutter analyze` clean and `flutter build web`, and **18 shared unit tests** pass.
 
@@ -226,8 +252,15 @@ receives and plays it, and a hold-to-talk button gates transmission
 (`WebRtcSession.setTalking` → `LiveViewController.startTalking/stopTalking`)
 plus 4 unit tests. Remaining: the two-device audible check (needs real devices).
 
+**Steps 10–11 — Notifications & event history: backend + read layer done.** The
+event→notification fan-out is now extracted and **emulator-tested** (`fanOutEventNotification`,
++4 function tests → 14 total), the `shared` package gained `events`/`notifications`
+read layers (+4 unit tests), and the parent has an Activity screen with an unread
+badge. Remaining: client FCM token registration + the `connection_lost` heartbeat
+detector (with Step 9), and a live end-to-end pass.
+
 **Next: Step 9 — Background + auto-reconnect** (Android foreground service,
-heartbeats, ICE-restart) builds on this.
+heartbeats, ICE-restart) — largely native/device work.
 
 ### Outstanding owner/console tasks (not code)
 - Rotate the previously-exposed service-account key.

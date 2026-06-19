@@ -12,13 +12,14 @@ import { getMessaging } from "firebase-admin/messaging";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
-import { EVENT_NOTIFICATION_COPY, EventDoc } from "./types";
+import { EventDoc } from "./types";
 import {
   claimPairingCodeLogic,
   PairingError,
   requestPairingCodeLogic,
 } from "./pairing";
 import { buildIceConfig } from "./turn";
+import { fanOutEventNotification } from "./notifications";
 
 initializeApp();
 const db = getFirestore();
@@ -91,36 +92,20 @@ export const onEventCreated = onDocumentCreated("events/{eventId}", async (event
   if (!snap) return;
   const data = snap.data() as EventDoc;
 
-  const copy = EVENT_NOTIFICATION_COPY[data.type];
-  if (!copy) {
-    logger.warn("Unknown event type", { type: data.type });
+  const result = await fanOutEventNotification(
+    db,
+    event.params.eventId,
+    data,
+    (message) => getMessaging().sendEachForMulticast(message)
+  );
+
+  if (result.skippedReason) {
+    logger.warn("Event skipped", { type: data.type, reason: result.skippedReason });
     return;
   }
-
-  // Look up the owner's FCM tokens.
-  const userSnap = await db.collection("users").doc(data.ownerId).get();
-  const tokens: string[] = userSnap.get("fcmTokens") ?? [];
-
-  // Persist an in-app notification.
-  await db.collection("notifications").add({
-    userId: data.ownerId,
-    title: copy.title,
-    body: copy.body,
-    eventId: event.params.eventId,
-    read: false,
-    createdAt: new Date(),
+  logger.info("Notification fanned out", {
+    ownerId: data.ownerId,
+    type: data.type,
+    pushTokens: result.pushTokens,
   });
-
-  if (tokens.length === 0) {
-    logger.info("No FCM tokens for owner", { ownerId: data.ownerId });
-    return;
-  }
-
-  await getMessaging().sendEachForMulticast({
-    tokens,
-    notification: { title: copy.title, body: copy.body },
-    data: { eventId: event.params.eventId, type: data.type, deviceId: data.deviceId },
-  });
-
-  logger.info("Notification fanned out", { ownerId: data.ownerId, type: data.type });
 });

@@ -24,6 +24,18 @@ export 'src/features/devices/data/repositories/firestore_device_repository.dart'
 export 'src/features/devices/domain/repositories/device_repository.dart';
 export 'src/features/devices/presentation/device_providers.dart';
 
+// Events feature (event history)
+export 'src/features/events/data/models/event_model.dart';
+export 'src/features/events/data/repositories/firestore_event_repository.dart';
+export 'src/features/events/domain/repositories/event_repository.dart';
+export 'src/features/events/presentation/event_providers.dart';
+
+// Notifications feature (in-app history)
+export 'src/features/notifications/data/models/notification_model.dart';
+export 'src/features/notifications/data/repositories/firestore_notification_repository.dart';
+export 'src/features/notifications/domain/repositories/notification_repository.dart';
+export 'src/features/notifications/presentation/notification_providers.dart';
+
 // Pairing feature
 export 'src/features/pairing/data/repositories/functions_pairing_repository.dart';
 export 'src/features/pairing/domain/repositories/pairing_repository.dart';

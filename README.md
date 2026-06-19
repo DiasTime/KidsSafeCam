@@ -30,11 +30,13 @@ on the device — only events leave the phone.
 
 ## Status
 
-Foundations through **Step 8 (two-way push-to-talk)** are implemented. The backend is
-emulator-verified and a GitHub Actions CI runs `flutter analyze`/tests plus the emulator
-suites on every push. The remaining gaps are two-device media checks (no Android SDK in the
-dev env) and the live Firebase bring-up. See the [implementation plan](docs/IMPLEMENTATION_PLAN.md)
-for the per-step state and what's next (Step 9 — background + auto-reconnect).
+Foundations through **Step 8 (two-way push-to-talk)** are implemented, plus the
+**Steps 10–11 backend** (event→notification fan-out) and read layer + parent Activity UI.
+The backend is emulator-verified and a GitHub Actions CI runs `flutter analyze`/tests plus
+the emulator suites on every push. The remaining gaps are two-device media checks (no Android
+SDK in the dev env), client FCM token registration, and the live Firebase bring-up. See the
+[implementation plan](docs/IMPLEMENTATION_PLAN.md) for the per-step state and what's next
+(Step 9 — background + auto-reconnect).
 
 | Area | Done |
 |---|---|
@@ -46,7 +48,8 @@ for the per-step state and what's next (Step 9 — background + auto-reconnect).
 | Video streaming (camera publishes, parent renders; full call lifecycle) | ✅ |
 | Audio streaming + parent-side mute control (**+4 tests**) | ✅ |
 | Two-way push-to-talk (parent → camera audio; **+4 tests**) | ✅ |
-| Background/reconnect, notifications, event history, AI | ⬜ upcoming |
+| Event→notification fan-out + history read layer/UI (**+8 tests**) | ✅ |
+| Background/reconnect, client FCM registration, on-device AI | ⬜ upcoming |
 
 ## Getting started
 
