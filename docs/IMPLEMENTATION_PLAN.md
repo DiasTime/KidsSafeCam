@@ -147,8 +147,23 @@ Camera publishes audio; parent plays it with mute control.
 
 **Done when:** parent hears live audio; mute works.
 
-## Step 8 — Two-way communication (push-to-talk)  ⬜
+## Step 8 — Two-way communication (push-to-talk)  🚧
 Parent → camera audio track gated by a push-to-talk button.
+
+- ✅ Parent (caller) now captures its microphone and publishes it on a
+  `sendrecv` audio line; the outgoing track starts **disabled**, so nothing is
+  transmitted until the button is held. Falls back to listen-only if the mic is
+  denied/unavailable (`talkAvailable` reflects this).
+- ✅ `WebRtcSession.setTalking` / `toggleTalking` + `talking` / `talkAvailable`
+  notifiers gate the outgoing track's `enabled` flag — no renegotiation.
+- ✅ Camera (callee) receives the parent's audio on the same audio transceiver
+  (its `addTrack` makes the line sendrecv) and plays it automatically.
+- ✅ `LiveViewController.startTalking` / `stopTalking` + `canTalk` / `isTalking`;
+  a **hold-to-talk** button appears in the live view when talk is available.
+- ✅ **+4 shared unit tests** for the push-to-talk state machine.
+- ⬜ Two-device check that holding the button is audible on the camera (needs
+  real devices/emulator — unavailable in the web-only dev env).
+
 **Done when:** speaking on the parent app is audible on the camera.
 
 ## Step 9 — Background + auto-reconnect  ⬜
@@ -205,7 +220,14 @@ volume toggle in the live-view app bar) plus 4 unit tests. Remaining: the
 two-device check that the parent hears live audio and that mute silences it
 (needs real devices/emulator).
 
-**Next: Step 8 — Two-way communication (push-to-talk)** builds directly on this.
+**Step 8 — Two-way push-to-talk: implemented (code-complete).** The parent
+publishes its mic on a sendrecv audio line (disabled until held), the camera
+receives and plays it, and a hold-to-talk button gates transmission
+(`WebRtcSession.setTalking` → `LiveViewController.startTalking/stopTalking`)
+plus 4 unit tests. Remaining: the two-device audible check (needs real devices).
+
+**Next: Step 9 — Background + auto-reconnect** (Android foreground service,
+heartbeats, ICE-restart) builds on this.
 
 ### Outstanding owner/console tasks (not code)
 - Rotate the previously-exposed service-account key.

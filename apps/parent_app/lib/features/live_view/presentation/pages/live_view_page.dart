@@ -61,6 +61,19 @@ class LiveViewPage extends ConsumerWidget {
                 right: 0,
                 child: LinearProgressIndicator(minHeight: 2),
               ),
+            if (state.canTalk)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 28,
+                child: Center(
+                  child: _PushToTalkButton(
+                    talking: state.isTalking,
+                    onStart: controller.startTalking,
+                    onStop: controller.stopTalking,
+                  ),
+                ),
+              ),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -68,6 +81,49 @@ class LiveViewPage extends ConsumerWidget {
           onPressed: hangUp,
           icon: const Icon(Icons.call_end),
           label: const Text('Hang up'),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hold-to-talk control (Step 8): transmits the parent's mic to the camera
+/// only while pressed.
+class _PushToTalkButton extends StatelessWidget {
+  const _PushToTalkButton({
+    required this.talking,
+    required this.onStart,
+    required this.onStop,
+  });
+
+  final bool talking;
+  final VoidCallback onStart;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => onStart(),
+      onTapUp: (_) => onStop(),
+      onTapCancel: onStop,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        decoration: BoxDecoration(
+          color: talking ? Colors.redAccent : Colors.white24,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white70),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(talking ? Icons.mic : Icons.mic_none, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              talking ? 'Talking…' : 'Hold to talk',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
         ),
       ),
     );

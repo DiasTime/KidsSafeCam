@@ -44,4 +44,37 @@ void main() {
     expect(() => session.setRemoteAudioMuted(true), returnsNormally);
     expect(session.remoteAudioMuted.value, isTrue);
   });
+
+  // ── Step 8 — push-to-talk state machine ────────────────────────────
+  test('push-to-talk starts released and unavailable before a mic is added', () {
+    final session = buildSession();
+    expect(session.talking.value, isFalse);
+    expect(session.talkAvailable.value, isFalse);
+  });
+
+  test('setTalking updates the talking notifier and returns the new state', () {
+    final session = buildSession();
+
+    expect(session.setTalking(true), isTrue);
+    expect(session.talking.value, isTrue);
+
+    expect(session.setTalking(false), isFalse);
+    expect(session.talking.value, isFalse);
+  });
+
+  test('toggleTalking flips the state each call', () {
+    final session = buildSession();
+
+    expect(session.toggleTalking(), isTrue);
+    expect(session.talking.value, isTrue);
+
+    expect(session.toggleTalking(), isFalse);
+    expect(session.talking.value, isFalse);
+  });
+
+  test('setTalking before a local stream exists is a safe no-op', () {
+    final session = buildSession();
+    expect(() => session.setTalking(true), returnsNormally);
+    expect(session.talking.value, isTrue);
+  });
 }
