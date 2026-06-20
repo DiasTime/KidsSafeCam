@@ -13,7 +13,7 @@ import 'firebase_options.dart';
 /// flag in web/index.html instead.
 const _recaptchaV3SiteKey = String.fromEnvironment(
   'RECAPTCHA_V3_SITE_KEY',
-  defaultValue: 'RECAPTCHA_V3_SITE_KEY_PLACEHOLDER',
+  defaultValue: '6LeM-yktAAAAAEs5T0pDbA7-ti9Q02DtjrTDMmdn',
 );
 
 /// Entry point for the Camera app.

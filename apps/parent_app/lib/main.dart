@@ -16,7 +16,7 @@ import 'firebase_options.dart';
 /// works on localhost — but production web must use the real key.
 const _recaptchaV3SiteKey = String.fromEnvironment(
   'RECAPTCHA_V3_SITE_KEY',
-  defaultValue: 'RECAPTCHA_V3_SITE_KEY_PLACEHOLDER',
+  defaultValue: '6LeM-yktAAAAAEs5T0pDbA7-ti9Q02DtjrTDMmdn',
 );
 
 /// Entry point for the Parent app.
