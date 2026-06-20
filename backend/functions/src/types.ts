@@ -8,6 +8,7 @@ export type DeviceStatus = "online" | "offline";
 export type EventType =
   | "baby_cry"
   | "fall_detected"
+  | "baby_awake"
   | "motion_detected"
   | "sound_detected"
   | "connection_lost";
@@ -55,6 +56,7 @@ export interface NotificationDoc {
 export const EVENT_NOTIFICATION_COPY: Record<EventType, { title: string; body: string }> = {
   baby_cry: { title: "Baby is crying", body: "Crying was detected on the camera." },
   fall_detected: { title: "Possible fall detected", body: "A possible fall was detected." },
+  baby_awake: { title: "Baby is awake", body: "Your baby appears to have woken up." },
   motion_detected: { title: "Motion detected", body: "Motion was detected on the camera." },
   sound_detected: { title: "Loud sound detected", body: "A loud sound was detected." },
   connection_lost: { title: "Camera offline", body: "Your camera went offline." },

@@ -30,7 +30,8 @@ export 'src/features/events/data/repositories/firestore_event_repository.dart';
 export 'src/features/events/domain/repositories/event_repository.dart';
 export 'src/features/events/presentation/event_providers.dart';
 
-// Notifications feature (in-app history)
+// Notifications feature (in-app history + push registration)
+export 'src/features/notifications/data/fcm_registrar.dart';
 export 'src/features/notifications/data/models/notification_model.dart';
 export 'src/features/notifications/data/repositories/firestore_notification_repository.dart';
 export 'src/features/notifications/domain/repositories/notification_repository.dart';

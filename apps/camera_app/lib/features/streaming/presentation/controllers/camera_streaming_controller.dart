@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../../../ai/presentation/ai_monitor_controller.dart';
+
 /// State the camera screen renders: whether the local preview is live, whether
 /// a parent is currently connected, and the peer-connection state of any active
 /// call.
@@ -59,7 +61,6 @@ class CameraStreamingController
     extends AutoDisposeNotifier<CameraStreamingState> {
   final RTCVideoRenderer localRenderer = RTCVideoRenderer();
 
-  MediaStream? _previewStream;
   WebRtcSession? _session;
   StreamSubscription<String>? _callSub;
   String? _deviceId;
@@ -68,41 +69,16 @@ class CameraStreamingController
   @override
   CameraStreamingState build() {
     ref.onDispose(_dispose);
-    _startPreview();
+    localRenderer.initialize();
+    // Keep the AI monitor alive while this screen is mounted; it owns the
+    // camera + mic and runs the detectors until a live call borrows them.
+    ref.listen(aiMonitorControllerProvider, (_, _) {});
     ref.listen<AsyncValue<Device?>>(
       cameraDeviceProvider,
       (_, next) => _onDeviceChanged(next.valueOrNull?.id),
       fireImmediately: true,
     );
     return const CameraStreamingState();
-  }
-
-  Future<void> _startPreview() async {
-    try {
-      await localRenderer.initialize();
-      final stream = await navigator.mediaDevices.getUserMedia({
-        'audio': {
-          'echoCancellation': true,
-          'noiseSuppression': true,
-          'autoGainControl': true,
-        },
-        'video': {
-          'facingMode': 'user',
-          'width': {'ideal': 1280},
-          'height': {'ideal': 720},
-        },
-      });
-      if (_disposed) {
-        await stream.dispose();
-        return;
-      }
-      _previewStream = stream;
-      localRenderer.srcObject = stream;
-      state = state.copyWith(previewReady: true, clearError: true);
-    } catch (e) {
-      if (_disposed) return;
-      state = state.copyWith(errorMessage: 'Could not start the camera: $e');
-    }
   }
 
   void _onDeviceChanged(String? deviceId) {
@@ -121,6 +97,10 @@ class CameraStreamingController
     final deviceId = _deviceId;
     if (_disposed || deviceId == null) return;
 
+    // Hand the camera + mic to WebRTC: pause the AI monitor first so the call
+    // can capture them. AI resumes when the call ends.
+    await ref.read(aiMonitorControllerProvider.notifier).pauseForCall();
+
     // Only one viewer at a time in Step 6: replace any existing session.
     await _session?.close();
 
@@ -133,6 +113,12 @@ class CameraStreamingController
       iceServers: iceServers,
     );
     _session = session;
+    // Show the operator the call's local capture.
+    session.onLocalStream = (stream) {
+      if (_disposed || _session != session) return;
+      localRenderer.srcObject = stream;
+      state = state.copyWith(previewReady: true, clearError: true);
+    };
     session.connectionState.addListener(() {
       if (_disposed || _session != session) return;
       final cs = session.connectionState.value;
@@ -144,16 +130,39 @@ class CameraStreamingController
           cs == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
         Helper.setSpeakerphoneOn(true);
       }
+      if (cs == RTCPeerConnectionState.RTCPeerConnectionStateClosed ||
+          cs == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+          cs == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
+        _endCall(session);
+      }
     });
 
     try {
-      await session.answerAsCallee(localStream: _previewStream);
+      // localStream omitted → the session captures its own camera + mic.
+      await session.answerAsCallee();
     } catch (e) {
       if (_disposed) return;
       state = state.copyWith(errorMessage: 'Failed to answer the call: $e');
       await session.close();
       if (_session == session) _session = null;
+      _resumeMonitoring();
     }
+  }
+
+  /// Tears the live call down and hands the camera/mic back to the AI monitor.
+  Future<void> _endCall(WebRtcSession session) async {
+    if (_session != session) return;
+    _session = null;
+    await session.close();
+    if (_disposed) return;
+    localRenderer.srcObject = null;
+    state = state.copyWith(previewReady: false, clearCallState: true);
+    _resumeMonitoring();
+  }
+
+  void _resumeMonitoring() {
+    if (_disposed) return;
+    ref.read(aiMonitorControllerProvider.notifier).resumeAfterCall();
   }
 
   Future<void> _dispose() async {
@@ -161,10 +170,6 @@ class CameraStreamingController
     await _callSub?.cancel();
     await _session?.close();
     _session = null;
-    try {
-      await _previewStream?.dispose();
-    } catch (_) {}
-    _previewStream = null;
     try {
       await localRenderer.dispose();
     } catch (_) {}

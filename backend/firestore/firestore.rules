@@ -82,10 +82,20 @@ service cloud.firestore {
     // self-owned; mutation/deletion is locked down.
     match /events/{eventId} {
       allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      // Self-owned producers, OR the device's paired camera reporting an event
+      // for the device owner (on-device AI runs under the camera identity, so it
+      // writes events attributed to the parent who owns the device).
       allow create: if isSignedIn()
-        && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.type is string
-        && request.resource.data.deviceId is string;
+        && request.resource.data.deviceId is string
+        && (
+          request.resource.data.ownerId == request.auth.uid
+          || (
+            exists(/databases/$(database)/documents/devices/$(request.resource.data.deviceId))
+            && get(/databases/$(database)/documents/devices/$(request.resource.data.deviceId)).data.cameraUid == request.auth.uid
+            && get(/databases/$(database)/documents/devices/$(request.resource.data.deviceId)).data.ownerId == request.resource.data.ownerId
+          )
+        );
       allow update, delete: if false;
     }
 

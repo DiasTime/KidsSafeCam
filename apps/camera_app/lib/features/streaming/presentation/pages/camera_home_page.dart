@@ -4,17 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../ai/presentation/ai_monitor_controller.dart';
+import '../../../ai/presentation/ai_preview.dart';
 import '../controllers/camera_streaming_controller.dart';
 
-/// Camera home screen: shows the live local preview and answers parent calls in
-/// the foreground (Step 6). Pairing is reachable from the app bar; background
-/// operation and AI indicators land in later steps.
+/// Camera home screen: runs on-device AI monitoring (cry / fall / wake) and
+/// answers parent calls in the foreground. While idle it shows the monitoring
+/// preview; during a call it shows the live capture.
 class CameraHomePage extends ConsumerWidget {
   const CameraHomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(cameraStreamingControllerProvider);
+    final ai = ref.watch(aiMonitorControllerProvider);
     final renderer = ref
         .read(cameraStreamingControllerProvider.notifier)
         .localRenderer;
@@ -41,23 +44,35 @@ class CameraHomePage extends ConsumerWidget {
         children: [
           ColoredBox(
             color: Colors.black,
-            child: state.previewReady
-                ? RTCVideoView(
-                    renderer,
-                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                    mirror: true,
-                  )
-                : _PreviewPlaceholder(errorMessage: state.errorMessage),
+            child: _buildPreview(state, ai, renderer),
           ),
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: _StatusBar(state: state),
+            child: _StatusBar(state: state, ai: ai),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildPreview(
+    CameraStreamingState state,
+    AiMonitorState ai,
+    RTCVideoRenderer renderer,
+  ) {
+    if (state.previewReady) {
+      return RTCVideoView(
+        renderer,
+        objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+        mirror: true,
+      );
+    }
+    if (ai.monitoring) {
+      return buildAiPreview(ai.previewController);
+    }
+    return _PreviewPlaceholder(errorMessage: state.errorMessage);
   }
 }
 
@@ -95,9 +110,10 @@ class _PreviewPlaceholder extends StatelessWidget {
 }
 
 class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.state});
+  const _StatusBar({required this.state, required this.ai});
 
   final CameraStreamingState state;
+  final AiMonitorState ai;
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +139,12 @@ class _StatusBar extends StatelessWidget {
               label: 'A parent is connecting…',
               color: Colors.amberAccent,
             );
+    } else if (ai.monitoring) {
+      status = (
+        icon: Icons.shield_outlined,
+        label: 'Monitoring — ${_detectorLabel(ai.activeDetectors)}.',
+        color: Colors.greenAccent,
+      );
     } else {
       status = (
         icon: Icons.check_circle_outline,
@@ -150,5 +172,14 @@ class _StatusBar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _detectorLabel(List<String> detectors) {
+    if (detectors.contains('pose') && detectors.contains('cry')) {
+      return 'cry, fall & wake detection active';
+    }
+    if (detectors.contains('cry')) return 'cry detection active';
+    if (detectors.contains('pose')) return 'fall & wake detection active';
+    return 'AI active';
   }
 }
