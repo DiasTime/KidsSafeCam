@@ -228,29 +228,33 @@ motion/night mode, web dashboard, subscriptions.
 ## Current focus
 
 **Steps 0–5 complete** (Foundations → Auth → Firestore rules → Pairing → Signaling).
-Backend is emulator-verified (14 rules tests + 14 function tests). The Flutter layer has
-now been compiled on a real SDK: native (android/ios) + web platforms generated, both apps
-`flutter analyze` clean and `flutter build web`, and **18 shared unit tests** pass.
+Backend is emulator-verified (14 rules tests + 14 function tests). The Flutter layer is
+built with the full Android SDK + JDK 21: native (android/ios) + web platforms generated,
+both apps `flutter analyze` clean and `flutter build web`, and **18 shared unit tests** pass.
+Steps 6–8 are now **verified end-to-end on a real Android phone (camera) + web parent**
+against the live `kidssafecam` backend (pairing, video, two-way audio).
 
 **Step 6 — Video streaming: implemented (code-complete).** `WebRtcSession` (RTCPeerConnection
 on top of `SignalingClient` + `iceServersProvider`) carries video + audio; the camera answers
 incoming calls with a live preview; the parent renders the remote stream in a `/camera/:deviceId`
-live-view screen with status + hang-up (full call lifecycle). Remaining for Step 6: the
-two-device < 500 ms LAN latency check (needs real devices/emulator — unavailable in the current
-web-only dev environment).
+live-view screen with status + hang-up (full call lifecycle). **Verified on a real Android
+phone + web parent:** live video streams end-to-end (a precise < 500 ms LAN latency
+measurement remains informal).
 
 **Step 7 — Audio streaming: implemented (code-complete).** Audio rides the same
 peer connection established in Step 6; this step adds parent-side mute control
 (`WebRtcSession.toggleRemoteAudioMuted` → `LiveViewController.toggleMute` → a
-volume toggle in the live-view app bar) plus 4 unit tests. Remaining: the
-two-device check that the parent hears live audio and that mute silences it
-(needs real devices/emulator).
+volume toggle in the live-view app bar) plus 4 unit tests. **Verified on real devices:**
+the parent hears the camera's live audio.
 
 **Step 8 — Two-way push-to-talk: implemented (code-complete).** The parent
 publishes its mic on a sendrecv audio line (disabled until held), the camera
 receives and plays it, and a hold-to-talk button gates transmission
 (`WebRtcSession.setTalking` → `LiveViewController.startTalking/stopTalking`)
-plus 4 unit tests. Remaining: the two-device audible check (needs real devices).
+plus 4 unit tests. **Verified on a real Android phone + web parent:** hold-to-talk
+transmits and the camera plays it on the loudspeaker (`setSpeakerphoneOn` on
+connect). Note: the parent needs a real input device — a silent/virtual mic
+(e.g. Stereo Mix, SteelSeries Sonar) transmits zero-frame audio.
 
 **Steps 10–11 — Notifications & event history: backend + read layer done.** The
 event→notification fan-out is now extracted and **emulator-tested** (`fanOutEventNotification`,
