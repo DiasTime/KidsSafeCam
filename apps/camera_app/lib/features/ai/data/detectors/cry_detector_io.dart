@@ -34,6 +34,7 @@ class YamnetCryDetector implements AiDetector {
   StreamSubscription<Uint8List>? _audioSub;
   final _controller = StreamController<AiDetection>.broadcast();
   final _samples = <double>[];
+  final _byteCarry = <int>[];
 
   List<int> _inputShape = const [15600];
   int _windowSamples = 15600;
@@ -67,13 +68,18 @@ class YamnetCryDetector implements AiDetector {
   }
 
   void _onAudio(Uint8List bytes) {
-    final pcm = bytes.buffer.asInt16List(
-      bytes.offsetInBytes,
-      bytes.lengthInBytes ~/ 2,
-    );
-    for (final s in pcm) {
-      _samples.add(s / 32768.0);
+    // Decode little-endian PCM16 by hand: the record stream yields byte views
+    // with arbitrary (sometimes odd) offsets, and a 16-bit sample can straddle
+    // two chunks — so buffer leftover bytes rather than reinterpreting the view.
+    _byteCarry.addAll(bytes);
+    final usable = _byteCarry.length - (_byteCarry.length % 2);
+    for (var i = 0; i < usable; i += 2) {
+      var v = _byteCarry[i] | (_byteCarry[i + 1] << 8);
+      if (v >= 0x8000) v -= 0x10000;
+      _samples.add(v / 32768.0);
     }
+    _byteCarry.removeRange(0, usable);
+
     while (_samples.length >= _windowSamples) {
       final window = Float32List.fromList(_samples.sublist(0, _windowSamples));
       _samples.removeRange(0, _windowSamples);
@@ -142,6 +148,7 @@ class YamnetCryDetector implements AiDetector {
       await _recorder.stop();
     } catch (_) {}
     _samples.clear();
+    _byteCarry.clear();
     _consecutiveHits = 0;
   }
 
