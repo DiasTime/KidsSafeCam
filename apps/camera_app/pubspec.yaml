@@ -25,6 +25,12 @@ dependencies:
   tflite_flutter: ^0.11.0
   # Raw 16 kHz mono PCM stream feeding the YAMNet classifier.
   record: ^6.0.0
+  # Camera frames for fall/wake (the camera plugin runs the image stream while
+  # AI monitors; WebRTC borrows the camera during a live call).
+  camera: ^0.11.0
+  # On-device pose estimation for fall + wake. ML Kit is mobile-only, so the
+  # pose detector is behind a conditional import with a web/no-op stub.
+  google_mlkit_pose_detection: ^0.14.0
 
 dev_dependencies:
   flutter_test:
