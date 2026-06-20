@@ -1,0 +1,78 @@
+name: iOS build
+
+# Compile-verifies both Flutter apps for iOS on a macOS runner — so iOS breakage
+# is caught in CI even though the project is developed on Windows (iOS cannot be
+# built without macOS + Xcode). Build-only, no code signing: this proves the
+# Dart + CocoaPods + Xcode build graph is healthy. Running on a real device still
+# needs an Apple Developer account + provisioning (see docs/PLATFORM_STATUS.md).
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+
+jobs:
+  build-ios:
+    name: Build iOS (no codesign)
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [camera_app, parent_app]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      # GoogleService-Info.plist is a runtime resource and is git-ignored. It is
+      # not needed to compile (firebase_options.dart drives initialization), but
+      # the Xcode Runner target may reference it. Drop a placeholder if absent so
+      # the resource-copy phase doesn't fail the build-only check.
+      - name: Ensure placeholder GoogleService-Info.plist
+        working-directory: apps/${{ matrix.app }}/ios/Runner
+        run: |
+          if [ ! -f GoogleService-Info.plist ]; then
+            cat > GoogleService-Info.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>API_KEY</key><string>placeholder</string>
+            <key>GCM_SENDER_ID</key><string>000000000000</string>
+            <key>BUNDLE_ID</key><string>com.kidssafecam.${{ matrix.app }}</string>
+            <key>PROJECT_ID</key><string>kidssafecam</string>
+            <key>STORAGE_BUCKET</key><string>kidssafecam.appspot.com</string>
+            <key>IS_ADS_ENABLED</key><false/>
+            <key>IS_ANALYTICS_ENABLED</key><false/>
+            <key>IS_APPINVITE_ENABLED</key><true/>
+            <key>IS_GCM_ENABLED</key><true/>
+            <key>IS_SIGNIN_ENABLED</key><true/>
+            <key>GOOGLE_APP_ID</key><string>1:000000000000:ios:0000000000000000</string>
+          </dict>
+          </plist>
+          PLIST
+          fi
+
+      - name: Resolve deps
+        working-directory: apps/${{ matrix.app }}
+        run: flutter pub get
+
+      - name: Build iOS (no codesign)
+        working-directory: apps/${{ matrix.app }}
+        run: flutter build ios --release --no-codesign

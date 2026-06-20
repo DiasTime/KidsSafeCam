@@ -36,10 +36,13 @@ on the device — only events leave the phone.
 Foundations through **Step 8 (two-way push-to-talk)** are implemented, plus the
 **Steps 10–11 backend** (event→notification fan-out) and read layer + parent Activity UI.
 The backend is emulator-verified and a GitHub Actions CI runs `flutter analyze`/tests plus
-the emulator suites on every push. The remaining gaps are two-device media checks (no Android
-SDK in the dev env), client FCM token registration, and the live Firebase bring-up. See the
+the emulator suites on every push. End-to-end media is now verified on a **real Android phone
++ web parent** against the live `kidssafecam` backend: pairing, video, and two-way
+push-to-talk all work. The remaining gaps are client FCM token registration, on-device AI,
+and iOS-on-device (needs macOS — CI compile-checks it). See the
 [implementation plan](docs/IMPLEMENTATION_PLAN.md) for the per-step state and what's next
-(Step 9 — background + auto-reconnect).
+(Step 9 — background + auto-reconnect), and [platform status](docs/PLATFORM_STATUS.md) for
+what each platform still needs.
 
 | Area | Done |
 |---|---|
@@ -50,14 +53,19 @@ SDK in the dev env), client FCM token registration, and the live Firebase bring-
 | WebRTC signaling client + ephemeral TURN credentials (**3 tests**) | ✅ |
 | Video streaming (camera publishes, parent renders; full call lifecycle) | ✅ |
 | Audio streaming + parent-side mute control (**+4 tests**) | ✅ |
-| Two-way push-to-talk (parent → camera audio; **+4 tests**) | ✅ |
+| Two-way push-to-talk (parent → camera audio; speaker-routed; **+4 tests**) | ✅ |
 | Event→notification fan-out + history read layer/UI (**+8 tests**) | ✅ |
+| App Check wired all platforms (Play Integrity / DeviceCheck / reCAPTCHA) | ✅ |
+| Live device bring-up (Android phone + web parent, end-to-end) | ✅ |
 | Background/reconnect, client FCM registration, on-device AI | ⬜ upcoming |
 
 ## Getting started
 
 Prerequisites: Flutter SDK (3.x), Dart, Node 22+, the Firebase CLI, and Melos
-(`dart pub global activate melos`).
+(`dart pub global activate melos`). Building/running the **Android** apps also
+needs **JDK 21** (Temurin) — point Flutter at it once with
+`flutter config --jdk-dir "<jdk-21-path>"` so Gradle uses it in any shell.
+**iOS** requires macOS + Xcode (it cannot build on Windows; CI compile-checks it).
 
 ```bash
 # Install Dart workspace deps across all packages
@@ -83,6 +91,12 @@ cd backend/functions && npm install && npm run test:emulator
 melos run test
 ```
 
+To run on a real Android device or the web with the callable functions working,
+the apps must pass **App Check** (every callable enforces it). See
+[docs/FIREBASE_SETUP.md §5](docs/FIREBASE_SETUP.md) for provider setup (Play
+Integrity / DeviceCheck / reCAPTCHA + debug tokens) and
+[docs/PLATFORM_STATUS.md](docs/PLATFORM_STATUS.md) for the per-platform checklist.
+
 Firebase is configured for the `kidssafecam` project; `firebase_options.dart` is committed
 (client config, not a secret). The native `google-services.json` / `GoogleService-Info.plist`
 are generated locally. See [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md).
@@ -97,6 +111,9 @@ GitHub Actions run on every push and pull request:
     of both apps to catch build-time breakage.
   - *Firestore rules* and *Cloud Functions*: emulator-based test suites (JDK 21).
   - *npm audit*: fails on HIGH/CRITICAL advisories in the backend's production deps.
+- **iOS build** (`.github/workflows/ios-build.yml`) — compile-verifies both apps
+  for iOS on a macOS runner (`flutter build ios --no-codesign`), so iOS breakage
+  is caught even though the project is developed on Windows.
 - **CodeQL** (`.github/workflows/codeql.yml`) — security/quality scanning of the
   backend TypeScript on push/PR to `main` and weekly.
 - **Deploy** (`.github/workflows/deploy.yml`) — after CI passes on `main`, deploys

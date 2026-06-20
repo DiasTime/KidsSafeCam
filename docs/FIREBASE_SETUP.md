@@ -85,7 +85,7 @@ left for you to confirm):
   region close to your users (e.g. `eur3` for Europe, `nam5` for the US) **before** creating.
 - **Cloud Functions** → requires the **Blaze** (pay-as-you-go) plan.
 - **Cloud Messaging** → used in Step 10.
-- **App Check** → register providers before any production traffic.
+- **App Check** → register providers before any production traffic (see §5).
 
 After the database exists, deploy rules + indexes:
 
@@ -93,7 +93,47 @@ After the database exists, deploy rules + indexes:
 firebase deploy --only firestore:rules,firestore:indexes
 ```
 
-## 5. If a credential leaks
+The committed indexes include the composite indexes the app/functions query:
+`devices(ownerId, createdAt desc)` (parent camera list), `pairingCodes(cameraUid,
+consumed, expiresAt)` (pairing rate-limit), plus the events/notifications indexes.
+
+## 5. App Check (the callables enforce it)
+
+Every callable (`requestPairingCode`, `claimPairingCode`, `getTurnCredentials`)
+runs with `enforceAppCheck: true`, so each app must attest per platform. Both
+apps activate App Check in `main.dart`:
+
+- **Android** — Play Integrity (release) / debug provider (debug builds)
+- **iOS** — DeviceCheck (release) / debug provider (debug builds)
+- **Web** — reCAPTCHA v3 (`ReCaptchaV3Provider`)
+
+Console setup — **Firebase Console → App Check → Apps**:
+
+- **Android (Play Integrity)**: register the app for Play Integrity, add the
+  signing **SHA-256** under Project Settings → (Android app), and enable the
+  **Play Integrity API** in Google Cloud. ⚠️ Sideloaded debug-signed release APKs
+  may fail attestation — use a Play internal-testing track, or debug builds +
+  tokens for local dev.
+- **iOS (DeviceCheck)**: register the app for DeviceCheck (needs an Apple
+  Developer account; iOS only builds on macOS).
+- **Web (reCAPTCHA v3)**: create a reCAPTCHA v3 key at
+  <https://www.google.com/recaptcha/admin> (add your deploy domains + `localhost`),
+  paste the **secret key** into the web app's App Check registration, and pass the
+  **site key** to the build:
+  `flutter run -d chrome --dart-define=RECAPTCHA_V3_SITE_KEY=<site-key>`.
+
+**Debug builds** (`flutter run` without `--release`) use App Check debug
+providers, which print a per-install token on first launch (Android: `adb
+logcat`; web: browser console). Allow-list it under App Check → (app) → **Manage
+debug tokens**. The token persists across runs on the same install.
+
+Android **release signing** is configured via `apps/camera_app/android/key.properties`
+(git-ignored); the release buildType falls back to debug signing when it is absent
+so CI/web builds still work.
+
+See [PLATFORM_STATUS.md](PLATFORM_STATUS.md) for the full per-platform checklist.
+
+## 6. If a credential leaks
 
 1. Google Cloud Console → **IAM & Admin → Service Accounts**
 2. Open the affected account → **Keys** → delete the exposed key id

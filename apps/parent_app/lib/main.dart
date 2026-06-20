@@ -1,5 +1,7 @@
 import 'package:ai_baby_monitor_shared/ai_baby_monitor_shared.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,10 +10,32 @@ import 'core/router.dart';
 // Not committed (git-ignored). See docs/FIREBASE_SETUP.md.
 import 'firebase_options.dart';
 
+/// reCAPTCHA v3 site key for the parent web app. Register the web app under
+/// Firebase Console → App Check (reCAPTCHA v3) to get this key. For local web
+/// dev the debug token in `web/index.html` is used instead, so a placeholder
+/// works on localhost — but production web must use the real key.
+const _recaptchaV3SiteKey = String.fromEnvironment(
+  'RECAPTCHA_V3_SITE_KEY',
+  defaultValue: '6LeM-yktAAAAAEs5T0pDbA7-ti9Q02DtjrTDMmdn',
+);
+
 /// Entry point for the Parent app.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // App Check guards the callable Cloud Functions (claimPairingCode + TURN),
+  // which are deployed with `enforceAppCheck: true`. Web attests via reCAPTCHA
+  // v3; debug/dev uses the token set in web/index.html (web) or the debug
+  // provider (Android). Register the printed/debug token in the console.
+  await FirebaseAppCheck.instance.activate(
+    providerWeb: ReCaptchaV3Provider(_recaptchaV3SiteKey),
+    providerAndroid: kReleaseMode
+        ? const AndroidPlayIntegrityProvider()
+        : const AndroidDebugProvider(),
+    providerApple: kReleaseMode
+        ? const AppleDeviceCheckProvider()
+        : const AppleDebugProvider(),
+  );
   runApp(const ProviderScope(child: ParentApp()));
 }
 

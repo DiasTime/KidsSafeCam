@@ -81,7 +81,11 @@ class CameraStreamingController
     try {
       await localRenderer.initialize();
       final stream = await navigator.mediaDevices.getUserMedia({
-        'audio': true,
+        'audio': {
+          'echoCancellation': true,
+          'noiseSuppression': true,
+          'autoGainControl': true,
+        },
         'video': {
           'facingMode': 'user',
           'width': {'ideal': 1280},
@@ -131,7 +135,15 @@ class CameraStreamingController
     _session = session;
     session.connectionState.addListener(() {
       if (_disposed || _session != session) return;
-      state = state.copyWith(callState: session.connectionState.value);
+      final cs = session.connectionState.value;
+      state = state.copyWith(callState: cs);
+      // Route the parent's push-to-talk audio to the loudspeaker once the call
+      // is actually connected — WebRTC defaults mobile output to the earpiece,
+      // and setting it before the remote audio session is up gets reverted.
+      if (!kIsWeb &&
+          cs == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        Helper.setSpeakerphoneOn(true);
+      }
     });
 
     try {

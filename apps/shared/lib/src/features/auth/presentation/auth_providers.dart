@@ -20,8 +20,16 @@ final authStateChangesProvider = StreamProvider<AppUser?>(
 /// Handles sign-in / sign-up / sign-out and exposes a loading/error state the
 /// login UI can react to.
 class AuthController extends AutoDisposeAsyncNotifier<void> {
+  // True once this notifier has been auto-disposed. Guards against writing
+  // `state` after a successful auth flips the auth stream → router redirects →
+  // this provider disposes mid-await (otherwise: "Bad state: Future already
+  // completed"). riverpod 2.x has no `ref.mounted`, so we track it ourselves.
+  var _disposed = false;
+
   @override
-  FutureOr<void> build() {}
+  FutureOr<void> build() {
+    ref.onDispose(() => _disposed = true);
+  }
 
   Future<bool> signIn({required String email, required String password}) {
     return _run(
@@ -43,7 +51,9 @@ class AuthController extends AutoDisposeAsyncNotifier<void> {
 
   Future<bool> _run(Future<void> Function() action) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(action);
+    final result = await AsyncValue.guard(action);
+    if (_disposed) return !result.hasError;
+    state = result;
     return !state.hasError;
   }
 }

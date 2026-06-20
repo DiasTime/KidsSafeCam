@@ -8,17 +8,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router.dart';
 import 'firebase_options.dart';
 
+/// reCAPTCHA v3 site key (web). Real key only needed for web builds; pass via
+/// `--dart-define=RECAPTCHA_V3_SITE_KEY=...`. Localhost dev uses the debug-token
+/// flag in web/index.html instead.
+const _recaptchaV3SiteKey = String.fromEnvironment(
+  'RECAPTCHA_V3_SITE_KEY',
+  defaultValue: '6LeM-yktAAAAAEs5T0pDbA7-ti9Q02DtjrTDMmdn',
+);
+
 /// Entry point for the Camera app.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // App Check guards the callable Cloud Functions (pairing + TURN). Debug builds
-  // use the debug provider (register the printed token in the Firebase console);
-  // release builds attest via Play Integrity.
+  // App Check guards the callable Cloud Functions (pairing + TURN). Each
+  // platform attests differently; debug builds use debug providers (register
+  // the printed token in the Firebase console), release builds use real
+  // attestation (Play Integrity / DeviceCheck / reCAPTCHA).
   await FirebaseAppCheck.instance.activate(
     providerAndroid: kReleaseMode
         ? const AndroidPlayIntegrityProvider()
         : const AndroidDebugProvider(),
+    providerApple: kReleaseMode
+        ? const AppleDeviceCheckProvider()
+        : const AppleDebugProvider(),
+    providerWeb: ReCaptchaV3Provider(_recaptchaV3SiteKey),
   );
   runApp(const ProviderScope(child: CameraApp()));
 }
