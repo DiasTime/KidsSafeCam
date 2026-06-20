@@ -19,6 +19,12 @@ dependencies:
   # Local preview + media capture for streaming (Step 6). Shared pins the
   # version; this exposes RTCVideoView/RTCVideoRenderer to the camera UI.
   flutter_webrtc: ^1.5.2
+  # On-device AI — YAMNet (TFLite) cry detection. tflite_flutter is FFI-based
+  # (mobile/desktop, no web), so the detector is behind a conditional import and
+  # the web build falls back to a no-op stub.
+  tflite_flutter: ^0.11.0
+  # Raw 16 kHz mono PCM stream feeding the YAMNet classifier.
+  record: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -27,3 +33,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/models/yamnet.tflite
+    - assets/models/yamnet_class_map.csv
