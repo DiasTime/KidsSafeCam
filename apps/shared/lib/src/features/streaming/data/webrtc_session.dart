@@ -124,7 +124,11 @@ class WebRtcSession {
     if (enablePushToTalk) {
       try {
         final mic = await navigator.mediaDevices.getUserMedia({
-          'audio': true,
+          'audio': {
+            'echoCancellation': true,
+            'noiseSuppression': true,
+            'autoGainControl': true,
+          },
           'video': false,
         });
         _ownsLocalStream = true;
