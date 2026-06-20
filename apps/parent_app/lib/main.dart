@@ -32,6 +32,9 @@ Future<void> main() async {
     providerAndroid: kReleaseMode
         ? const AndroidPlayIntegrityProvider()
         : const AndroidDebugProvider(),
+    providerApple: kReleaseMode
+        ? const AppleDeviceCheckProvider()
+        : const AppleDebugProvider(),
   );
   runApp(const ProviderScope(child: ParentApp()));
 }
