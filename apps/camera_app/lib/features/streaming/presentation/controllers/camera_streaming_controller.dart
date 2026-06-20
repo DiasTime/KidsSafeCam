@@ -136,6 +136,11 @@ class CameraStreamingController
 
     try {
       await session.answerAsCallee(localStream: _previewStream);
+      // Route the parent's push-to-talk audio to the loudspeaker — WebRTC
+      // defaults to the earpiece on mobile, which is inaudible across a room.
+      if (!kIsWeb) {
+        await Helper.setSpeakerphoneOn(true);
+      }
     } catch (e) {
       if (_disposed) return;
       state = state.copyWith(errorMessage: 'Failed to answer the call: $e');
