@@ -1,6 +1,23 @@
 {
   "indexes": [
     {
+      "collectionGroup": "pairingCodes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cameraUid", "order": "ASCENDING" },
+        { "fieldPath": "consumed", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "devices",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
