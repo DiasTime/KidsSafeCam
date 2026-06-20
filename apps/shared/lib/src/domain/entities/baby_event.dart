@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 enum BabyEventType {
   babyCry('baby_cry'),
   fallDetected('fall_detected'),
+  babyAwake('baby_awake'),
   motionDetected('motion_detected'),
   soundDetected('sound_detected'),
   connectionLost('connection_lost');
