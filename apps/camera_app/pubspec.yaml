@@ -22,7 +22,7 @@ dependencies:
   # On-device AI — YAMNet (TFLite) cry detection. tflite_flutter is FFI-based
   # (mobile/desktop, no web), so the detector is behind a conditional import and
   # the web build falls back to a no-op stub.
-  tflite_flutter: ^0.11.0
+  tflite_flutter: ^0.12.1
   # Raw 16 kHz mono PCM stream feeding the YAMNet classifier.
   record: ^6.0.0
   # Camera frames for fall/wake (the camera plugin runs the image stream while
