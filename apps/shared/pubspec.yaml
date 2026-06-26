@@ -12,9 +12,9 @@ dependencies:
     sdk: flutter
   # Firebase
   firebase_core: ^4.11.0
-  firebase_auth: ^6.5.3
+  firebase_auth: ^6.5.4
   cloud_firestore: ^6.6.0
-  firebase_messaging: ^16.4.0
+  firebase_messaging: ^16.4.1
   cloud_functions: ^6.3.3
   firebase_app_check: ^0.4.5
   # Real-time media
@@ -22,7 +22,7 @@ dependencies:
   # State management + DI. Held at the latest 2.x: Riverpod 3's manual
   # (non-codegen) family-notifier API is a disruptive migration; 2.6.1 resolves
   # cleanly with every other upgraded package.
-  flutter_riverpod: ^2.6.1
+  flutter_riverpod: ^3.3.2
   # Routing
   go_router: ^17.3.0
   # Value equality for entities
